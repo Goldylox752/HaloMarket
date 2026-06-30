@@ -1,3 +1,16 @@
+if (req.files && req.files.length > 0) {
+    listing.images = req.files.map(file => ({
+        url: file.path,
+        public_id: file.filename
+    }));
+}
+const images = req.files
+    ? req.files.map(file => ({
+          url: file.path,
+          public_id: file.filename
+      }))
+    : [];
+
 const Listing = require("../models/Listing");
 
 // GET ALL LISTINGS
