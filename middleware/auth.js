@@ -1,114 +1,62 @@
-// ==========================================
-// middleware/auth.js
-// Halo Marketplace Authentication Middleware
-// ==========================================
+const supabase = require("../config/supabase");
 
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-
-// ==========================================
-// Verify JWT Token
-// ==========================================
-
-exports.protect = async (req, res, next) => {
+module.exports = async (req, res, next) => {
 
     try {
 
-        let token;
-
-        // Authorization: Bearer <token>
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith("Bearer")
-        ) {
-            token = req.headers.authorization.split(" ")[1];
-        }
-
-        // Cookie fallback
-        if (!token && req.cookies.token) {
-            token = req.cookies.token;
-        }
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: "Authentication required."
-            });
-        }
-
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
+        const token = req.headers.authorization?.replace(
+            "Bearer ",
+            ""
         );
 
-        const user = await User.findById(decoded.id);
+        if (!token) {
 
-        if (!user) {
             return res.status(401).json({
+
                 success: false,
-                message: "User no longer exists."
+
+                message: "Authentication required."
+
             });
+
         }
 
-        if (!user.isActive) {
-            return res.status(403).json({
+        const {
+
+            data,
+
+            error
+
+        } = await supabase.auth.getUser(token);
+
+        if (error || !data.user) {
+
+            return res.status(401).json({
+
                 success: false,
-                message: "Account has been disabled."
+
+                message: "Invalid token."
+
             });
+
         }
 
-        req.user = user;
+        req.user = data.user;
 
         next();
 
-    } catch (error) {
+    }
 
-        return res.status(401).json({
+    catch (err) {
+
+        return res.status(500).json({
+
             success: false,
-            message: "Invalid or expired token."
+
+            message: "Authentication failed."
+
         });
 
     }
-
-};
-
-// ==========================================
-// Admin Only
-// ==========================================
-
-exports.adminOnly = (req, res, next) => {
-
-    if (req.user.role !== "admin") {
-
-        return res.status(403).json({
-            success: false,
-            message: "Admin access required."
-        });
-
-    }
-
-    next();
-
-};
-
-// ==========================================
-// Vendor or Admin
-// ==========================================
-
-exports.vendorOnly = (req, res, next) => {
-
-    if (
-        req.user.role !== "vendor" &&
-        req.user.role !== "admin"
-    ) {
-
-        return res.status(403).json({
-            success: false,
-            message: "Vendor access required."
-        });
-
-    }
-
-    next();
 
 };
