@@ -1,0 +1,114 @@
+.vendor-grid,
+.testimonial-grid,
+.faq-grid,
+.footer-grid{
+display:grid;
+gap:30px;
+}
+
+.vendor-grid{
+grid-template-columns:repeat(4,1fr);
+}
+
+.testimonial-grid{
+grid-template-columns:repeat(3,1fr);
+}
+
+.faq-grid{
+grid-template-columns:repeat(2,1fr);
+margin-top:50px;
+}
+
+.footer-grid{
+grid-template-columns:2fr 1fr 1fr 1fr;
+}
+
+.vendor-card,
+.testimonial-card,
+.faq-card{
+background:#fff;
+padding:35px;
+border-radius:24px;
+box-shadow:0 15px 40px rgba(0,0,0,.08);
+transition:.3s;
+}
+
+.vendor-card:hover,
+.testimonial-card:hover,
+.faq-card:hover{
+transform:translateY(-8px);
+}
+
+.vendor-card img{
+width:110px;
+height:110px;
+border-radius:50%;
+object-fit:cover;
+margin:0 auto 20px;
+}
+
+.vendor-card{
+text-align:center;
+}
+
+.vendor-rating{
+margin:15px 0;
+font-weight:700;
+color:#f59e0b;
+}
+
+.newsletter{
+padding:120px 0;
+background:#2563eb;
+}
+
+.newsletter-box{
+text-align:center;
+color:#fff;
+}
+
+.newsletter form{
+display:flex;
+justify-content:center;
+gap:15px;
+margin-top:35px;
+flex-wrap:wrap;
+}
+
+.newsletter input{
+width:420px;
+max-width:100%;
+padding:18px;
+border:none;
+border-radius:50px;
+}
+
+.newsletter button{
+padding:18px 32px;
+border:none;
+border-radius:50px;
+font-weight:700;
+cursor:pointer;
+}
+
+footer{
+background:#111827;
+color:#d1d5db;
+padding:80px 0 40px;
+}
+
+footer a{
+display:block;
+margin:12px 0;
+color:#d1d5db;
+}
+
+footer hr{
+margin:50px 0 30px;
+border:none;
+border-top:1px solid #374151;
+}
+
+.copyright{
+text-align:center;
+}
