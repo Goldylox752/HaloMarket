@@ -1,82 +1,280 @@
 // ========================================
 // Halo Marketplace
 // server.js
+// Production Express Server
 // ========================================
+
 
 require("dotenv").config();
 
+
 const http = require("http");
+
 const app = require("./app");
-const { connectDatabase } = require("./config/database");
+
+const {
+    connectDatabase,
+    disconnectDatabase
+} = require("./config/database");
+
+
+
 
 // ========================================
 // CONFIG
 // ========================================
 
+
 const PORT = process.env.PORT || 5000;
 
+const NODE_ENV =
+process.env.NODE_ENV || "development";
+
+
+
+
 // ========================================
-// START SERVER
+// SERVER START
 // ========================================
 
-async function startServer() {
+
+async function startServer(){
+
     try {
-        // Connect database (PostgreSQL / Supabase)
+
+
+        console.log("🔄 Connecting database...");
+
+
         await connectDatabase();
 
-        const server = http.createServer(app);
 
-        server.listen(PORT, () => {
+        const server =
+        http.createServer(app);
+
+
+
+        // Server tuning
+
+        server.keepAliveTimeout = 65000;
+
+        server.headersTimeout = 66000;
+
+
+
+        server.listen(PORT, ()=>{
+
             logStartup();
+
         });
 
-        // Graceful shutdown support
+
+
         handleShutdown(server);
 
-    } catch (err) {
-        console.error("❌ Failed to start server:", err.message);
+
+
+    } catch(error){
+
+
+        console.error(
+            "❌ Server startup failed:",
+            error.message
+        );
+
+
         process.exit(1);
+
+
     }
+
+
 }
+
+
+
+
 
 // ========================================
 // STARTUP LOGS
 // ========================================
 
-function logStartup() {
-    console.log("\n======================================");
-    console.log("🚀 Halo Marketplace API");
-    console.log("======================================");
-    console.log(`Environment : ${process.env.NODE_ENV || "development"}`);
-    console.log(`Server      : http://localhost:${PORT}`);
-    console.log("======================================\n");
+
+function logStartup(){
+
+
+console.log(`
+
+========================================
+
+🚀 Halo Marketplace API
+
+========================================
+
+Environment : ${NODE_ENV}
+
+Port        : ${PORT}
+
+Database    : Connected
+
+Status      : ONLINE
+
+========================================
+
+`);
+
 }
 
+
+
+
+
 // ========================================
-// GRACEFUL SHUTDOWN
+// SHUTDOWN HANDLER
 // ========================================
 
-function handleShutdown(server) {
-    const shutdown = async (signal) => {
-        console.log(`\n⚠️  Received ${signal}. Shutting down gracefully...`);
 
-        try {
-            server.close(() => {
-                console.log("🛑 HTTP server closed");
-                process.exit(0);
-            });
-        } catch (err) {
-            console.error("Shutdown error:", err.message);
-            process.exit(1);
-        }
-    };
+function handleShutdown(server){
 
-    process.on("SIGINT", () => shutdown("SIGINT"));
-    process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+
+const shutdown = async(signal)=>{
+
+
+console.log(
+`\n⚠️ ${signal} received`
+);
+
+
+
+try{
+
+
+server.close(async()=>{
+
+
+console.log(
+"🛑 HTTP server closed"
+);
+
+
+
+if(disconnectDatabase){
+
+
+await disconnectDatabase();
+
+
+console.log(
+"🗄 Database disconnected"
+);
+
+
 }
+
+
+
+process.exit(0);
+
+
+
+});
+
+
+
+}catch(error){
+
+
+console.error(
+"Shutdown error:",
+error.message
+);
+
+
+process.exit(1);
+
+
+}
+
+
+
+};
+
+
+
+
+
+process.on(
+"SIGINT",
+()=>shutdown("SIGINT")
+);
+
+
+
+process.on(
+"SIGTERM",
+()=>shutdown("SIGTERM")
+);
+
+
+
+}
+
+
+
+
+
+
+
+// ========================================
+// GLOBAL ERROR HANDLING
+// ========================================
+
+
+process.on(
+"unhandledRejection",
+(error)=>{
+
+
+console.error(
+"Unhandled Promise Rejection:",
+error
+);
+
+
+process.exit(1);
+
+
+});
+
+
+
+
+
+process.on(
+"uncaughtException",
+(error)=>{
+
+
+console.error(
+"Uncaught Exception:",
+error
+);
+
+
+process.exit(1);
+
+
+});
+
+
+
+
+
 
 // ========================================
 // BOOT
 // ========================================
+
 
 startServer();
