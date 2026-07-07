@@ -1,4 +1,407 @@
-<script src="/assets/js/data/products.js"></script>
-<script src="/assets/js/cart.js"></script>
-<script src="/assets/js/pages/product.js"></script>
-<script src="/assets/js/main.js"></script>
+<!-- product.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Product | Halo Marketplace</title>
+
+
+<style>
+
+* {
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+
+body {
+
+    margin:0;
+    background:#f5f7fb;
+
+}
+
+
+header {
+
+    background:#111827;
+    color:white;
+    padding:20px;
+
+}
+
+
+.logo {
+
+    font-size:24px;
+    font-weight:bold;
+
+}
+
+
+
+.container {
+
+    max-width:1200px;
+    margin:auto;
+    padding:40px;
+
+}
+
+
+
+.product {
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    background:white;
+    padding:30px;
+    border-radius:18px;
+
+}
+
+
+
+.product-image img {
+
+    width:100%;
+    height:450px;
+    object-fit:cover;
+    border-radius:15px;
+
+}
+
+
+
+.title {
+
+    font-size:32px;
+    font-weight:bold;
+
+}
+
+
+
+.price {
+
+    font-size:28px;
+    font-weight:bold;
+    margin:20px 0;
+
+}
+
+
+
+.badge {
+
+    display:inline-block;
+    background:#dcfce7;
+    color:#166534;
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:14px;
+
+}
+
+
+
+.description {
+
+    color:#555;
+    line-height:1.6;
+    margin:20px 0;
+
+}
+
+
+
+.seller {
+
+    background:#f9fafb;
+    padding:20px;
+    border-radius:12px;
+    margin-top:20px;
+
+}
+
+
+
+.buttons {
+
+    display:flex;
+    gap:15px;
+    margin-top:25px;
+
+}
+
+
+
+button {
+
+    flex:1;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+
+}
+
+
+
+.buy {
+
+    background:#111827;
+    color:white;
+
+}
+
+
+
+.cart {
+
+    background:#e5e7eb;
+
+}
+
+
+
+@media(max-width:800px){
+
+.product {
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<div class="logo">
+Halo Marketplace
+</div>
+
+</header>
+
+
+
+
+<div class="container">
+
+
+<div class="product">
+
+
+
+<div class="product-image">
+
+
+<img id="productImage"
+src="https://images.unsplash.com/photo-1592899677977-9c10ca588bbd">
+
+
+</div>
+
+
+
+
+<div>
+
+
+<h1 id="productTitle" class="title">
+
+Apple iPhone 15 Pro
+
+</h1>
+
+
+
+
+<div class="badge">
+
+✔ Verified Seller
+
+</div>
+
+
+
+
+<div id="price" class="price">
+
+$999
+
+</div>
+
+
+
+
+<div class="description">
+
+
+Premium smartphone in excellent condition.
+Includes original box and charging cable.
+Fast shipping available across Canada.
+
+
+</div>
+
+
+
+
+
+<div class="seller">
+
+
+<h3>
+Seller
+</h3>
+
+
+<p>
+<strong>
+Tech Canada Store
+</strong>
+</p>
+
+
+<p>
+★★★★★ 4.9 Rating
+</p>
+
+
+<p>
+Location: Alberta, Canada
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="buttons">
+
+
+<button class="cart"
+onclick="addCart()">
+
+Add To Cart
+
+</button>
+
+
+
+<button class="buy"
+onclick="buyNow()">
+
+Buy Now
+
+</button>
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+
+
+const productName =
+params.get("name");
+
+
+
+if(productName){
+
+document.getElementById(
+"productTitle"
+).innerText =
+productName;
+
+}
+
+
+
+
+
+function addCart(){
+
+
+alert(
+"Product added to cart"
+);
+
+
+localStorage.setItem(
+
+"halo_cart",
+
+JSON.stringify({
+
+product:
+productName,
+
+quantity:1
+
+})
+
+);
+
+
+}
+
+
+
+
+function buyNow(){
+
+
+window.location.href =
+"/checkout.html";
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
