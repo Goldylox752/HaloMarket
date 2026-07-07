@@ -1,10 +1,12 @@
 // ========================================
 // Halo Marketplace
-// app.js
 // Production Express Application
+// app.js
 // ========================================
 
+
 require("dotenv").config();
+
 
 const express = require("express");
 const path = require("path");
@@ -16,32 +18,56 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 
+
+// Middleware
+
+const {
+    notFound,
+    errorHandler
+
+} = require("./middleware/errorMiddleware");
+
+
+
 const app = express();
+
 
 
 // ========================================
 // TRUST PROXY
 // ========================================
 
-app.set("trust proxy", 1);
+app.set(
+    "trust proxy",
+    1
+);
+
 
 
 // ========================================
-// SECURITY
+// SECURITY HEADERS
 // ========================================
 
 app.use(
+
     helmet({
+
         crossOriginResourcePolicy:{
+
             policy:"cross-origin"
+
         }
+
     })
+
 );
+
 
 
 // ========================================
 // CORS
 // ========================================
+
 
 const allowedOrigins = [
 
@@ -54,52 +80,84 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 
+
 app.use(
+
     cors({
 
         origin:(origin,callback)=>{
 
+
             if(!origin){
-                return callback(null,true);
+
+                return callback(
+                    null,
+                    true
+                );
+
             }
 
 
-            if(allowedOrigins.includes(origin)){
-                return callback(null,true);
+
+            if(
+                allowedOrigins.includes(origin)
+            ){
+
+                return callback(
+                    null,
+                    true
+                );
+
             }
 
 
-            return callback(
-                new Error("CORS blocked")
+
+            callback(
+                new Error(
+                    "CORS blocked"
+                )
             );
+
 
         },
 
+
         credentials:true,
 
+
         methods:[
+
             "GET",
             "POST",
             "PUT",
             "PATCH",
             "DELETE",
             "OPTIONS"
+
         ],
 
+
         allowedHeaders:[
+
             "Content-Type",
             "Authorization"
+
         ]
 
     })
+
 );
+
 
 
 // ========================================
 // PERFORMANCE
 // ========================================
 
-app.use(compression());
+app.use(
+    compression()
+);
+
 
 
 // ========================================
@@ -107,169 +165,256 @@ app.use(compression());
 // ========================================
 
 app.use(
+
     morgan(
+
         process.env.NODE_ENV === "production"
-        ?"combined"
-        :"dev"
+
+        ? "combined"
+
+        : "dev"
+
     )
+
 );
+
 
 
 // ========================================
 // COOKIES
 // ========================================
 
-app.use(cookieParser());
+app.use(
+    cookieParser()
+);
+
 
 
 // ========================================
 // STRIPE WEBHOOK
-// MUST BE BEFORE JSON
+// IMPORTANT:
+// Must be BEFORE express.json()
 // ========================================
+
 
 app.use(
 
-"/api/webhooks/stripe",
+    "/api/webhooks/stripe",
 
-express.raw({
-    type:"application/json"
-}),
+    express.raw({
 
-require("./routes/webhookRoutes")
+        type:"application/json"
+
+    }),
+
+    require(
+        "./routes/webhookRoutes"
+    )
 
 );
 
 
-// ========================================
-// BODY PARSER
-// ========================================
 
-app.use(
-express.json({
-    limit:"10mb"
-})
-);
+// ========================================
+// REQUEST BODY
+// ========================================
 
 
 app.use(
-express.urlencoded({
-    extended:true,
-    limit:"10mb"
-})
+
+    express.json({
+
+        limit:"10mb"
+
+    })
+
 );
 
 
+
+app.use(
+
+    express.urlencoded({
+
+        extended:true,
+
+        limit:"10mb"
+
+    })
+
+);
+
+
+
 // ========================================
-// RATE LIMIT
+// RATE LIMITER
 // ========================================
 
-const limiter = rateLimit({
 
-windowMs:
-15 * 60 * 1000,
+const apiLimiter = rateLimit({
 
-
-max:
-
-process.env.NODE_ENV === "production"
-?250
-:5000,
+    windowMs:
+    15 * 60 * 1000,
 
 
-standardHeaders:true,
+    max:
 
-legacyHeaders:false,
+    process.env.NODE_ENV === "production"
+
+    ?250
+
+    :5000,
 
 
-message:{
-    success:false,
-    message:"Too many requests."
-}
+    standardHeaders:true,
+
+
+    legacyHeaders:false,
+
+
+    message:{
+
+        success:false,
+
+        message:
+        "Too many requests."
+
+    }
 
 });
 
 
-app.use("/api",limiter);
+
+app.use(
+
+    "/api",
+
+    apiLimiter
+
+);
+
 
 
 // ========================================
 // STATIC FILES
 // ========================================
 
+
 app.use(
 
-"/uploads",
+    "/uploads",
 
-express.static(
-path.join(__dirname,"uploads")
-)
+    express.static(
+
+        path.join(
+            __dirname,
+            "uploads"
+        )
+
+    )
 
 );
 
 
+
 app.use(
 
-express.static(
+    express.static(
 
-path.join(
-__dirname,
-"public"
-)
+        path.join(
+            __dirname,
+            "public"
+        )
 
-)
+    )
 
 );
+
 
 
 // ========================================
 // HEALTH CHECK
 // ========================================
 
-app.get("/api/health",(req,res)=>{
+
+app.get(
+
+    "/api/health",
+
+    (req,res)=>{
 
 
-res.json({
+        res.status(200).json({
 
-success:true,
+            success:true,
 
-application:"Halo Marketplace",
-
-version:"1.0.0",
-
-environment:
-process.env.NODE_ENV || "development",
-
-database:"Supabase PostgreSQL",
-
-uptime:process.uptime(),
-
-timestamp:new Date()
-
-});
+            application:
+            "Halo Marketplace",
 
 
-});
+            version:
+            process.env.npm_package_version
+            ||
+            "1.0.0",
+
+
+            environment:
+            process.env.NODE_ENV
+            ||
+            "development",
+
+
+            database:
+            "Supabase PostgreSQL",
+
+
+            uptime:
+            process.uptime(),
+
+
+            timestamp:
+            new Date()
+
+        });
+
+
+    }
+
+);
+
 
 
 // ========================================
 // WEBSITE
 // ========================================
 
-app.get("/",(req,res)=>{
+
+app.get(
+
+    "/",
+
+    (req,res)=>{
 
 
-res.sendFile(
+        res.sendFile(
 
-path.join(
-__dirname,
-"public",
-"index.html"
-)
+            path.join(
+
+                __dirname,
+
+                "public",
+
+                "index.html"
+
+            )
+
+        );
+
+
+    }
 
 );
 
-
-});
 
 
 // ========================================
@@ -279,152 +424,145 @@ __dirname,
 
 const routes = {
 
-auth:"authRoutes",
 
-users:"userRoutes",
+    auth:"authRoutes",
 
-vendors:"vendorRoutes",
+    users:"userRoutes",
 
-products:"productRoutes",
+    vendors:"vendorRoutes",
 
-categories:"categoryRoutes",
+    products:"productRoutes",
 
-brands:"brandRoutes",
+    categories:"categoryRoutes",
 
-cart:"cartRoutes",
+    brands:"brandRoutes",
 
-checkout:"checkoutRoutes",
+    cart:"cartRoutes",
 
-orders:"orderRoutes",
+    checkout:"checkoutRoutes",
 
-payments:"paymentRoutes",
+    orders:"orderRoutes",
 
-reviews:"reviewRoutes",
+    payments:"paymentRoutes",
 
-wishlist:"wishlistRoutes",
+    reviews:"reviewRoutes",
 
-search:"searchRoutes",
+    wishlist:"wishlistRoutes",
 
-notifications:"notificationRoutes",
+    search:"searchRoutes",
 
-admin:"adminRoutes",
+    notifications:"notificationRoutes",
 
-messages:"messageRoutes",
+    admin:"adminRoutes",
 
-chat:"chatRoutes",
+    messages:"messageRoutes",
 
-analytics:"analyticsRoutes",
+    chat:"chatRoutes",
 
-coupons:"couponRoutes"
+    analytics:"analyticsRoutes",
+
+    coupons:"couponRoutes"
+
 
 };
 
 
 
-Object.entries(routes).forEach(([pathName,file])=>{
+Object.entries(routes)
+.forEach(
+
+([route,file])=>{
+
+
+    app.use(
+
+        `/api/${route}`,
+
+        require(
+            `./routes/${file}`
+        )
+
+    );
+
+
+})
+
+);
+
+
+
+// ========================================
+// ERROR HANDLING
+// MUST BE LAST
+// ========================================
 
 
 app.use(
-
-`/api/${pathName}`,
-
-require(`./routes/${file}`)
-
+    notFound
 );
 
 
-});
-
-
-
-// ========================================
-// 404
-// ========================================
-
-app.use((req,res)=>{
-
-
-res.status(404).json({
-
-success:false,
-
-message:
-`Route ${req.originalUrl} not found`
-
-});
-
-
-});
-
-
-
-// ========================================
-// ERROR HANDLER
-// ========================================
-
-app.use((err,req,res,next)=>{
-
-
-console.error(err);
-
-
-res.status(
-err.status || 500
-)
-
-.json({
-
-success:false,
-
-message:
-
-process.env.NODE_ENV==="production"
-
-?"Internal Server Error"
-
-:err.message
-
-
-});
-
-
-});
-
-
-
-// ========================================
-// PROCESS ERRORS
-// ========================================
-
-process.on(
-"unhandledRejection",
-err=>{
-
-console.error(
-"Unhandled Rejection:",
-err
+app.use(
+    errorHandler
 );
 
-});
+
+
+// ========================================
+// PROCESS HANDLERS
+// ========================================
 
 
 process.on(
-"uncaughtException",
-err=>{
 
-console.error(
-"Uncaught Exception:",
-err
+    "unhandledRejection",
+
+    (error)=>{
+
+
+        console.error(
+
+            "Unhandled Promise Rejection:",
+
+            error
+
+        );
+
+
+    }
+
 );
 
-process.exit(1);
 
-});
+
+process.on(
+
+    "uncaughtException",
+
+    (error)=>{
+
+
+        console.error(
+
+            "Uncaught Exception:",
+
+            error
+
+        );
+
+
+        process.exit(1);
+
+
+    }
+
+);
 
 
 
 // ========================================
 // EXPORT
 // ========================================
+
 
 module.exports = app;
