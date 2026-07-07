@@ -11,7 +11,7 @@
 
 
 <title>
-Sell | Halo Marketplace
+Create Listing | Halo Marketplace
 </title>
 
 
@@ -22,7 +22,6 @@ Sell | Halo Marketplace
 
 
 <body>
-
 
 
 <header class="header">
@@ -48,12 +47,10 @@ Seller Dashboard
 
 
 
-
 <main>
 
 
 <section>
-
 
 <div class="container">
 
@@ -62,35 +59,25 @@ Seller Dashboard
 <div class="seller-box">
 
 
-
-<div>
-
-
 <h1>
 Create A Listing
 </h1>
 
 
 <p>
-
 Sell your products across Canada with Halo Marketplace.
-
 </p>
 
 
-</div>
-
-
-
 
 </div>
+
 
 
 
 
 
 <div class="card listing-form">
-
 
 
 <h2>
@@ -127,13 +114,18 @@ required
 
 
 
+
 <label>
 Category
 </label>
 
 
+<select id="category" required>
 
-<select id="category">
+
+<option value="">
+Select Category
+</option>
 
 
 <option>
@@ -172,17 +164,20 @@ Collectibles
 
 
 
+
+
 <label>
 Description
 </label>
-
 
 
 <textarea
 
 id="description"
 
-placeholder="Describe your product..."
+placeholder="Describe your product"
+
+required
 
 ></textarea>
 
@@ -197,7 +192,6 @@ placeholder="Describe your product..."
 
 <div>
 
-
 <label>
 Price
 </label>
@@ -209,7 +203,7 @@ id="price"
 
 type="number"
 
-placeholder="99.99"
+step="0.01"
 
 required
 
@@ -220,8 +214,8 @@ required
 
 
 
-<div>
 
+<div>
 
 <label>
 Quantity
@@ -234,7 +228,9 @@ id="quantity"
 
 type="number"
 
-placeholder="1"
+value="1"
+
+min="1"
 
 required
 
@@ -259,7 +255,6 @@ Product Images
 </label>
 
 
-
 <input
 
 id="image"
@@ -270,14 +265,14 @@ accept="image/*"
 
 multiple
 
+required
+
 >
 
 
 
 
-
-<div class="preview" id="preview"></div>
-
+<div id="preview" class="preview"></div>
 
 
 
@@ -294,9 +289,7 @@ multiple
 
 
 <p>
-
-Verified sellers receive higher visibility and buyer trust.
-
+Verified sellers receive better ranking and buyer trust.
 </p>
 
 
@@ -310,6 +303,8 @@ Verified sellers receive higher visibility and buyer trust.
 
 <button
 
+id="submitBtn"
+
 type="submit"
 
 class="btn"
@@ -319,6 +314,7 @@ class="btn"
 Publish Listing
 
 </button>
+
 
 
 
@@ -337,6 +333,7 @@ Publish Listing
 
 
 
+
 </div>
 
 
@@ -350,7 +347,24 @@ Publish Listing
 
 
 
+
+<script src="/assets/js/auth.js"></script>
+
+
 <script>
+
+
+requireSeller();
+
+
+
+
+const API_URL =
+
+"/api/v1";
+
+
+
 
 
 const imageInput =
@@ -360,11 +374,13 @@ document.getElementById(
 );
 
 
+
 const preview =
 
 document.getElementById(
 "preview"
 );
+
 
 
 
@@ -381,23 +397,31 @@ preview.innerHTML="";
 
 
 
-[...imageInput.files].forEach(file=>{
+Array.from(imageInput.files)
+
+.forEach(file=>{
 
 
 const img =
+
 document.createElement(
 "img"
 );
 
 
+
 img.src =
+
 URL.createObjectURL(file);
+
 
 
 img.width=120;
 
 
+
 img.style.borderRadius="15px";
+
 
 
 preview.appendChild(img);
@@ -410,6 +434,7 @@ preview.appendChild(img);
 }
 
 );
+
 
 
 
@@ -435,105 +460,178 @@ e.preventDefault();
 
 
 
-const product = {
+
+const token =
+
+localStorage.getItem(
+"halo_token"
+);
 
 
-title:
+
+
+
+
+const formData =
+
+new FormData();
+
+
+
+
+
+formData.append(
+
+"title",
 
 document.getElementById(
 "title"
-).value,
+).value
+
+);
 
 
 
-category:
+
+
+formData.append(
+
+"category",
 
 document.getElementById(
 "category"
-).value,
+).value
+
+);
 
 
 
-description:
+
+
+formData.append(
+
+"description",
 
 document.getElementById(
 "description"
-).value,
+).value
+
+);
 
 
 
-price:
+
+
+formData.append(
+
+"price",
 
 document.getElementById(
 "price"
-).value,
+).value
+
+);
 
 
 
-quantity:
+
+
+formData.append(
+
+"quantity",
 
 document.getElementById(
 "quantity"
 ).value
 
-
-
-};
-
+);
 
 
 
 
 
-console.log(product);
+
+
+Array.from(
+
+imageInput.files
+
+)
+
+.forEach(file=>{
+
+
+formData.append(
+
+"image",
+
+file
+
+);
+
+
+});
 
 
 
 
 
-/*
 
-SUPABASE FLOW:
-
-
-1. Upload images
-
-storage bucket:
-
-product-images
-
-
-
-2. Insert product:
-
-
-products table
-
-
-
-POST:
-
-/api/products/create
-
-
-
-*/
-
-
-
-
+const status =
 
 document.getElementById(
 "status"
-).innerHTML =
-
-"Listing created successfully!";
+);
 
 
 
+const button =
 
-e.target.reset();
+document.getElementById(
+"submitBtn"
+);
 
+
+
+
+
+try{
+
+
+button.disabled=true;
+
+
+button.innerHTML =
+"Uploading...";
+
+
+
+
+
+const response =
+
+await fetch(
+
+`${API_URL}/products`,
+
+{
+
+
+method:"POST",
+
+
+headers:{
+
+
+Authorization:
+
+`Bearer ${token}`
+
+
+},
+
+
+body:formData
 
 
 }
@@ -541,7 +639,89 @@ e.target.reset();
 );
 
 
+
+
+
+const data =
+
+await response.json();
+
+
+
+
+
+
+
+if(data.success){
+
+
+
+status.innerHTML =
+
+"✅ Listing published successfully!";
+
+
+
+e.target.reset();
+
+
+
+preview.innerHTML="";
+
+
+
+}else{
+
+
+status.innerHTML =
+
+data.message ||
+
+"Unable to create listing";
+
+
+}
+
+
+
+}
+
+
+catch(error){
+
+
+
+console.error(error);
+
+
+status.innerHTML =
+"Server error";
+
+
+}
+
+
+
+finally{
+
+
+button.disabled=false;
+
+
+button.innerHTML =
+"Publish Listing";
+
+
+}
+
+
+
+});
+
+
 </script>
+
+
 
 
 
@@ -638,6 +818,14 @@ margin:25px 0;
 
 
 
+#status{
+
+margin-top:15px;
+
+font-weight:700;
+
+}
+
 
 
 @media(max-width:700px){
@@ -652,7 +840,6 @@ grid-template-columns:1fr;
 
 
 </style>
-
 
 
 </body>
