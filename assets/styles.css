@@ -1,35 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
+/* =====================================
+HALO MARKETPLACE
+MAIN STYLESHEET
+===================================== */
 
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Halo Marketplace | Canada's AI Marketplace</title>
-
-<meta name="description" content="Halo Marketplace is Canada's AI-powered marketplace for buying and selling products securely with verified sellers.">
-
-<meta name="theme-color" content="#2563eb">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-
-<style>
 
 :root{
-
 --primary:#2563eb;
 --primary-dark:#1d4ed8;
+--success:#16a34a;
 --text:#111827;
 --muted:#6b7280;
 --light:#f8fafc;
 --border:#e5e7eb;
 --white:#ffffff;
-
+--shadow:0 25px 60px rgba(0,0,0,.08);
 }
 
 
@@ -48,8 +32,11 @@ scroll-behavior:smooth;
 body{
 
 font-family:'Inter',sans-serif;
+
 color:var(--text);
-background:white;
+
+background:var(--white);
+
 line-height:1.6;
 
 }
@@ -58,6 +45,7 @@ line-height:1.6;
 a{
 
 text-decoration:none;
+
 color:inherit;
 
 }
@@ -65,8 +53,9 @@ color:inherit;
 
 img{
 
-max-width:100%;
 display:block;
+
+max-width:100%;
 
 }
 
@@ -74,7 +63,9 @@ display:block;
 .container{
 
 width:92%;
+
 max-width:1400px;
+
 margin:auto;
 
 }
@@ -89,12 +80,20 @@ HEADER
 header{
 
 position:fixed;
+
 top:0;
+
+left:0;
+
 width:100%;
-background:rgba(255,255,255,.95);
-backdrop-filter:blur(15px);
-border-bottom:1px solid var(--border);
+
 z-index:1000;
+
+background:rgba(255,255,255,.95);
+
+backdrop-filter:blur(15px);
+
+border-bottom:1px solid var(--border);
 
 }
 
@@ -102,8 +101,11 @@ z-index:1000;
 nav{
 
 height:82px;
+
 display:flex;
+
 align-items:center;
+
 justify-content:space-between;
 
 }
@@ -112,7 +114,9 @@ justify-content:space-between;
 .logo{
 
 font-size:34px;
+
 font-weight:900;
+
 letter-spacing:-2px;
 
 }
@@ -128,8 +132,8 @@ color:var(--primary);
 .menu{
 
 display:flex;
+
 gap:30px;
-align-items:center;
 
 }
 
@@ -137,6 +141,7 @@ align-items:center;
 .menu a{
 
 font-weight:600;
+
 transition:.3s;
 
 }
@@ -152,38 +157,10 @@ color:var(--primary);
 .nav-buttons{
 
 display:flex;
-gap:15px;
+
 align-items:center;
 
-}
-
-
-
-.login-btn{
-
-padding:12px 22px;
-border:1px solid var(--border);
-border-radius:50px;
-font-weight:700;
-
-}
-
-
-
-.sell-btn{
-
-background:var(--primary);
-color:white;
-padding:14px 26px;
-border-radius:50px;
-font-weight:700;
-
-}
-
-
-.sell-btn:hover{
-
-background:var(--primary-dark);
+gap:15px;
 
 }
 
@@ -194,41 +171,56 @@ BUTTONS
 ===================== */
 
 
-.primary-btn{
+.primary-btn,
+.sell-btn{
+
+background:var(--primary);
+
+color:white;
+
+padding:15px 30px;
+
+border-radius:50px;
+
+font-weight:700;
 
 display:inline-block;
-background:var(--primary);
-color:white;
-padding:16px 32px;
-border-radius:50px;
-font-weight:700;
+
 border:none;
+
 cursor:pointer;
+
+transition:.3s;
 
 }
 
 
-.primary-btn:hover{
+.primary-btn:hover,
+.sell-btn:hover{
 
 background:var(--primary-dark);
 
 }
 
 
+.secondary-btn,
+.login-btn{
 
-.secondary-btn{
+padding:14px 28px;
+
+border-radius:50px;
+
+border:1px solid var(--border);
+
+font-weight:700;
 
 display:inline-block;
-border:1px solid var(--border);
-padding:16px 32px;
-border-radius:50px;
-font-weight:700;
 
 }
 
 
-
-.secondary-btn:hover{
+.secondary-btn:hover,
+.login-btn:hover{
 
 background:var(--light);
 
@@ -251,6 +243,7 @@ padding:100px 0;
 .section-title{
 
 text-align:center;
+
 margin-bottom:50px;
 
 }
@@ -259,7 +252,8 @@ margin-bottom:50px;
 .section-title span{
 
 color:var(--primary);
-font-weight:700;
+
+font-weight:800;
 
 }
 
@@ -267,16 +261,519 @@ font-weight:700;
 .section-title h2{
 
 font-size:42px;
+
 font-weight:900;
-letter-spacing:-1px;
 
 }
+
 
 
 .section-title p{
 
 color:var(--muted);
+
 margin-top:15px;
+
+}
+
+
+
+/* =====================
+HERO
+===================== */
+
+
+.hero{
+
+padding-top:170px;
+
+background:linear-gradient(
+180deg,
+#fff,
+#eff6ff
+);
+
+}
+
+
+.hero-grid{
+
+display:grid;
+
+grid-template-columns:1.1fr .9fr;
+
+gap:70px;
+
+align-items:center;
+
+}
+
+
+.badge{
+
+display:inline-block;
+
+background:#dbeafe;
+
+color:var(--primary);
+
+padding:10px 20px;
+
+border-radius:50px;
+
+font-weight:700;
+
+margin-bottom:25px;
+
+}
+
+
+.hero h1{
+
+font-size:68px;
+
+line-height:1.05;
+
+font-weight:900;
+
+letter-spacing:-3px;
+
+}
+
+
+.hero p{
+
+font-size:20px;
+
+color:var(--muted);
+
+margin:25px 0;
+
+}
+
+
+.hero-buttons{
+
+display:flex;
+
+gap:20px;
+
+margin:35px 0;
+
+}
+
+
+.search-box{
+
+display:flex;
+
+background:white;
+
+padding:10px;
+
+border-radius:60px;
+
+box-shadow:var(--shadow);
+
+}
+
+
+.search-box input{
+
+flex:1;
+
+border:none;
+
+outline:none;
+
+padding:15px;
+
+}
+
+
+.search-btn{
+
+background:var(--primary);
+
+color:white;
+
+border:none;
+
+padding:15px 30px;
+
+border-radius:50px;
+
+font-weight:700;
+
+}
+
+
+
+.trust{
+
+display:flex;
+
+gap:12px;
+
+flex-wrap:wrap;
+
+margin-top:25px;
+
+}
+
+
+.trust span{
+
+padding:10px 16px;
+
+border:1px solid var(--border);
+
+border-radius:40px;
+
+background:white;
+
+font-weight:600;
+
+}
+
+
+
+/* =====================
+PRODUCTS
+===================== */
+
+
+.product-grid{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+gap:25px;
+
+}
+
+
+.product-card{
+
+border:1px solid var(--border);
+
+border-radius:25px;
+
+overflow:hidden;
+
+background:white;
+
+transition:.3s;
+
+}
+
+
+.product-card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:var(--shadow);
+
+}
+
+
+.product-image{
+
+position:relative;
+
+}
+
+
+.product-image img{
+
+height:260px;
+
+object-fit:cover;
+
+}
+
+
+.badge-verified{
+
+position:absolute;
+
+top:12px;
+
+left:12px;
+
+background:var(--success);
+
+color:white;
+
+padding:6px 12px;
+
+border-radius:20px;
+
+font-size:12px;
+
+}
+
+
+
+.wishlist-btn{
+
+position:absolute;
+
+right:12px;
+
+top:12px;
+
+width:38px;
+
+height:38px;
+
+border-radius:50%;
+
+border:none;
+
+background:white;
+
+font-size:20px;
+
+cursor:pointer;
+
+}
+
+
+.wishlist-btn.active{
+
+color:red;
+
+}
+
+
+.quick-preview{
+
+position:absolute;
+
+bottom:0;
+
+left:0;
+
+right:0;
+
+padding:15px;
+
+background:rgba(0,0,0,.6);
+
+opacity:0;
+
+text-align:center;
+
+transition:.3s;
+
+}
+
+
+.product-card:hover .quick-preview{
+
+opacity:1;
+
+}
+
+
+.quick-preview button{
+
+padding:8px 15px;
+
+border:none;
+
+border-radius:20px;
+
+font-weight:700;
+
+}
+
+
+.product-content{
+
+padding:20px;
+
+}
+
+
+.category-tag{
+
+color:var(--primary);
+
+font-weight:700;
+
+}
+
+
+.price-row{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+
+.quick-add{
+
+background:var(--primary);
+
+color:white;
+
+border:none;
+
+padding:10px 15px;
+
+border-radius:20px;
+
+font-weight:700;
+
+}
+
+
+
+/* =====================
+CARDS
+===================== */
+
+
+.category-grid,
+.feature-grid,
+.store-grid{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:25px;
+
+}
+
+
+.category-card,
+.feature-card,
+.store-card,
+.faq-card{
+
+padding:30px;
+
+border:1px solid var(--border);
+
+border-radius:25px;
+
+background:white;
+
+}
+
+
+.category-card:hover{
+
+box-shadow:var(--shadow);
+
+}
+
+
+
+/* =====================
+SELLER
+===================== */
+
+
+.seller-banner{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:50px;
+
+background:#eff6ff;
+
+padding:50px;
+
+border-radius:30px;
+
+}
+
+
+
+/* =====================
+FOOTER
+===================== */
+
+
+footer{
+
+background:#111827;
+
+color:white;
+
+padding:70px 0;
+
+}
+
+
+.footer-grid{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+gap:30px;
+
+}
+
+
+.footer-grid a{
+
+display:block;
+
+margin:10px 0;
+
+color:#d1d5db;
+
+}
+
+
+/* =====================
+TOAST
+===================== */
+
+
+.toast{
+
+position:fixed;
+
+bottom:25px;
+
+right:25px;
+
+background:#111827;
+
+color:white;
+
+padding:15px 20px;
+
+border-radius:12px;
+
+opacity:0;
+
+transform:translateY(20px);
+
+transition:.3s;
+
+}
+
+
+.toast.show{
+
+opacity:1;
+
+transform:translateY(0);
 
 }
 
@@ -287,7 +784,37 @@ MOBILE
 ===================== */
 
 
-@media(max-width:900px){
+@media(max-width:1000px){
+
+.hero-grid,
+.seller-banner{
+
+grid-template-columns:1fr;
+
+}
+
+
+.product-grid{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+
+.category-grid,
+.feature-grid,
+.store-grid{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+}
+
+
+
+@media(max-width:600px){
+
 
 .menu{
 
@@ -296,2061 +823,35 @@ display:none;
 }
 
 
-.hero-grid{
-
-grid-template-columns:1fr!important;
-
-}
-
-
-nav{
-
-height:70px;
-
-}
-
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<header>
-
-<div class="container">
-
-<nav>
-
-
-<a href="#home" class="logo">
-Halo<span>.</span>
-</a>
-
-
-
-<div class="menu">
-
-<a href="#home">Home</a>
-
-<a href="#marketplace">Marketplace</a>
-
-<a href="#categories">Categories</a>
-
-<a href="#stores">Stores</a>
-
-<a href="#sell">Sell</a>
-
-<a href="#support">Support</a>
-
-</div>
-
-
-
-<div class="nav-buttons">
-
-<a href="login.html" class="login-btn">
-Login
-</a>
-
-
-<a href="#sell" class="sell-btn">
-Start Selling
-</a>
-
-
-</div>
-
-
-</nav>
-
-</div>
-
-</header>
-
-<!-- =========================
-HERO SECTION
-========================= -->
-
-<section id="home" class="hero">
-
-<div class="container">
-
-<div class="hero-grid">
-
-
-<div class="hero-content">
-
-
-<div class="badge">
-
-🇨🇦 Canada's Trusted AI Marketplace
-
-</div>
-
-
-<h1>
-
-Buy & Sell Anything.
-<br>
-Securely. Locally. Smarter.
-
-</h1>
-
-
-<p>
-
-Discover thousands of products from trusted Canadian sellers. 
-Halo Marketplace combines AI-powered search, verified sellers, 
-secure payments, and a modern shopping experience.
-
-</p>
-
-
-
-<div class="hero-buttons">
-
-<a href="#marketplace" class="primary-btn">
-
-Browse Products
-
-</a>
-
-
-<a href="#sell" class="secondary-btn">
-
-Start Selling
-
-</a>
-
-</div>
-
-
-
-<div class="search-box">
-
-
-<input 
-type="text"
-id="searchInput"
-placeholder="Search products, brands, stores or categories..."
->
-
-
-
-<button class="search-btn" onclick="searchProducts()">
-
-AI Search
-
-</button>
-
-
-</div>
-
-
-
-<div class="trust">
-
-
-<span>
-🛡 Secure Payments
-</span>
-
-
-<span>
-🤖 AI Search
-</span>
-
-
-<span>
-✅ Verified Sellers
-</span>
-
-
-<span>
-📍 Local Canadian Sellers
-</span>
-
-
-<span>
-🚚 Fast Shipping
-</span>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<div class="hero-card">
-
-
-<h2>
-Marketplace Highlights
-</h2>
-
-
-<p>
-
-Built for buyers, sellers, entrepreneurs and growing businesses across Canada.
-
-</p>
-
-
-
-<div class="stats-grid">
-
-
-<div class="stat">
-
-<h3>
-50K+
-</h3>
-
-<p>
-Products Listed
-</p>
-
-</div>
-
-
-
-<div class="stat">
-
-<h3>
-8,500+
-</h3>
-
-<p>
-Verified Sellers
-</p>
-
-</div>
-
-
-
-
-<div class="stat">
-
-<h3>
-150K+
-</h3>
-
-<p>
-Happy Customers
-</p>
-
-</div>
-
-
-
-
-<div class="stat">
-
-<h3>
-24/7
-</h3>
-
-<p>
-Secure Support
-</p>
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-<style>
-
-
-.hero{
-
-padding-top:170px;
-padding-bottom:120px;
-background:linear-gradient(
-180deg,
-#ffffff,
-#eff6ff
-);
-
-}
-
-
-
-.hero-grid{
-
-display:grid;
-grid-template-columns:1.1fr .9fr;
-gap:70px;
-align-items:center;
-
-}
-
-
-
-.badge{
-
-display:inline-block;
-background:#dbeafe;
-color:#2563eb;
-padding:10px 20px;
-border-radius:50px;
-font-weight:700;
-margin-bottom:25px;
-
-}
-
-
-
-.hero h1{
-
-font-size:68px;
-line-height:1.05;
-font-weight:900;
-letter-spacing:-3px;
-margin-bottom:25px;
-
-}
-
-
-
-.hero p{
-
-font-size:20px;
-color:var(--muted);
-max-width:650px;
-margin-bottom:35px;
-
-}
-
-
-
-.hero-buttons{
-
-display:flex;
-gap:18px;
-margin-bottom:35px;
-
-}
-
-
-
-.search-box{
-
-display:flex;
-background:white;
-padding:10px;
-border-radius:60px;
-box-shadow:0 25px 60px rgba(0,0,0,.08);
-max-width:650px;
-margin-bottom:30px;
-
-}
-
-
-
-.search-box input{
-
-flex:1;
-border:none;
-outline:none;
-padding:15px;
-font-size:16px;
-
-}
-
-
-
-.search-btn{
-
-background:var(--primary);
-color:white;
-border:none;
-padding:15px 28px;
-border-radius:50px;
-font-weight:700;
-cursor:pointer;
-
-}
-
-
-
-.trust{
-
-display:flex;
-flex-wrap:wrap;
-gap:12px;
-
-}
-
-
-
-.trust span{
-
-background:white;
-border:1px solid var(--border);
-padding:10px 15px;
-border-radius:40px;
-font-weight:600;
-
-}
-
-
-
-.hero-card{
-
-background:white;
-padding:40px;
-border-radius:30px;
-box-shadow:0 30px 70px rgba(0,0,0,.08);
-
-}
-
-
-
-.hero-card h2{
-
-font-size:34px;
-font-weight:900;
-margin-bottom:10px;
-
-}
-
-
-
-.hero-card p{
-
-font-size:16px;
-
-}
-
-
-
-.stats-grid{
-
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
-margin-top:30px;
-
-}
-
-
-
-.stat{
-
-background:#f8fafc;
-padding:25px;
-border-radius:20px;
-
-}
-
-
-
-.stat h3{
-
-font-size:34px;
-color:var(--primary);
-font-weight:900;
-
-}
-
-
-
-.stat p{
-
-color:var(--muted);
-font-size:14px;
-
-}
-
-
-
-@media(max-width:900px){
-
-.hero h1{
-
-font-size:42px;
-
-}
-
-
-.hero-buttons{
-
-flex-direction:column;
-
-}
-
-
-.search-box{
-
-flex-direction:column;
-
-}
-
-
-.search-btn{
-
-width:100%;
-
-}
-
-}
-
-</style>
-
-<!-- =========================
-CATEGORIES
-========================= -->
-
-<section id="categories">
-
-<div class="container">
-
-
-<div class="section-title">
-
-<span>
-Explore Categories
-</span>
-
-<h2>
-Shop Everything In One Marketplace
-</h2>
-
-<p>
-Discover products from trusted Canadian sellers.
-</p>
-
-</div>
-
-
-
-<div class="category-grid">
-
-
-<div class="category-card">
-<div class="category-icon">💻</div>
-<h3>Electronics</h3>
-<p>Phones, computers, gaming and smart devices.</p>
-</div>
-
-
-<div class="category-card">
-<div class="category-icon">🏠</div>
-<h3>Home & Living</h3>
-<p>Furniture, appliances and home essentials.</p>
-</div>
-
-
-<div class="category-card">
-<div class="category-icon">👕</div>
-<h3>Fashion</h3>
-<p>Clothing, footwear and accessories.</p>
-</div>
-
-
-<div class="category-card">
-<div class="category-icon">🚗</div>
-<h3>Automotive</h3>
-<p>Vehicles, parts, tools and accessories.</p>
-</div>
-
-
-<div class="category-card">
-<div class="category-icon">🎮</div>
-<h3>Gaming</h3>
-<p>Consoles, games and gaming gear.</p>
-</div>
-
-
-<div class="category-card">
-<div class="category-icon">🛠</div>
-<h3>Tools</h3>
-<p>Professional and DIY equipment.</p>
-</div>
-
-
-</div>
-
-
-</div>
-
-</section>
-
-
-
-
-<!-- =========================
-FEATURED PRODUCTS
-========================= -->
-
-
-<section id="marketplace">
-
-
-<div class="container">
-
-
-<div class="section-title">
-
-<span>
-Trending Products
-</span>
-
-<h2>
-Featured Marketplace Listings
-</h2>
-
-<p>
-Products from verified sellers across Canada.
-</p>
-
-</div>
-
-
-
-
-<div class="product-grid">
-
-
-
-<!-- PRODUCT 1 -->
-
-
-<div class="product-card">
-
-
-<div class="product-image">
-
-
-<img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=900"
-alt="iPhone">
-
-
-<span class="badge-verified">
-✔ Verified Seller
-</span>
-
-
-
-<button 
-class="wishlist-btn"
-onclick="toggleWishlist(this)">
-♡
-</button>
-
-
-
-<div class="quick-preview">
-
-<button onclick="quickView('iPhone 16 Pro')">
-Quick Preview
-</button>
-
-</div>
-
-
-</div>
-
-
-
-<div class="product-content">
-
-
-<span class="category-tag">
-Electronics
-</span>
-
-
-<h3>
-Apple iPhone 16 Pro
-</h3>
-
-
-<p>
-256GB • Excellent Condition
-</p>
-
-
-
-<div class="seller">
-
-★★★★★ 4.9
-
-<br>
-
-North Supply Co.
-
-</div>
-
-
-
-<div class="price-row">
-
-
-<h4>
-$1,199
-</h4>
-
-
-
-<button 
-class="quick-add"
-onclick="addToCart('iPhone 16 Pro')">
-
-Add Cart
-
-</button>
-
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<!-- PRODUCT 2 -->
-
-
-<div class="product-card">
-
-
-<div class="product-image">
-
-
-<img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900"
-alt="Smart Watch">
-
-
-<span class="badge-verified">
-✔ Verified Seller
-</span>
-
-
-<button 
-class="wishlist-btn"
-onclick="toggleWishlist(this)">
-♡
-</button>
-
-
-<div class="quick-preview">
-
-<button onclick="quickView('Galaxy Watch')">
-Quick Preview
-</button>
-
-</div>
-
-
-</div>
-
-
-
-<div class="product-content">
-
-
-<span class="category-tag">
-Wearables
-</span>
-
-
-<h3>
-Galaxy Smart Watch
-</h3>
-
-
-<p>
-GPS • Fitness • Waterproof
-</p>
-
-
-
-<div class="seller">
-
-★★★★★ 4.8
-
-<br>
-
-Urban Tech
-
-</div>
-
-
-
-<div class="price-row">
-
-
-<h4>
-$349
-</h4>
-
-
-<button 
-class="quick-add"
-onclick="addToCart('Galaxy Watch')">
-
-Add Cart
-
-</button>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-<!-- PRODUCT 3 -->
-
-
-<div class="product-card">
-
-
-<div class="product-image">
-
-
-<img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900"
-alt="Shoes">
-
-
-<span class="badge-verified">
-✔ Verified Seller
-</span>
-
-
-<button 
-class="wishlist-btn"
-onclick="toggleWishlist(this)">
-♡
-</button>
-
-
-<div class="quick-preview">
-
-<button onclick="quickView('Nike Shoes')">
-Quick Preview
-</button>
-
-</div>
-
-
-</div>
-
-
-
-<div class="product-content">
-
-
-<span class="category-tag">
-Footwear
-</span>
-
-
-<h3>
-Nike Running Shoes
-</h3>
-
-
-<p>
-Performance running footwear.
-</p>
-
-
-
-<div class="seller">
-
-★★★★★ 5.0
-
-<br>
-
-Active Life
-
-</div>
-
-
-
-<div class="price-row">
-
-
-<h4>
-$189
-</h4>
-
-
-
-<button 
-class="quick-add"
-onclick="addToCart('Nike Shoes')">
-
-Add Cart
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<!-- PRODUCT 4 -->
-
-
-<div class="product-card">
-
-
-<div class="product-image">
-
-
-<img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900"
-alt="Headphones">
-
-
-<span class="badge-verified">
-✔ Verified Seller
-</span>
-
-
-<button 
-class="wishlist-btn"
-onclick="toggleWishlist(this)">
-♡
-</button>
-
-
-
-<div class="quick-preview">
-
-<button onclick="quickView('Sony Headphones')">
-Quick Preview
-</button>
-
-</div>
-
-
-</div>
-
-
-
-<div class="product-content">
-
-
-<span class="category-tag">
-Audio
-</span>
-
-
-<h3>
-Sony Headphones
-</h3>
-
-
-<p>
-Premium wireless sound.
-</p>
-
-
-
-<div class="seller">
-
-★★★★★ 4.9
-
-<br>
-
-Audio Hub
-
-</div>
-
-
-
-<div class="price-row">
-
-
-<h4>
-$279
-</h4>
-
-
-<button 
-class="quick-add"
-onclick="addToCart('Sony Headphones')">
-
-Add Cart
-
-</button>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-<style>
-
-
-.category-grid{
-
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:25px;
-
-}
-
-
-
-.category-card{
-
-background:white;
-border:1px solid var(--border);
-padding:30px;
-border-radius:25px;
-transition:.3s;
-
-}
-
-
-
-.category-card:hover{
-
-transform:translateY(-5px);
-box-shadow:0 20px 40px rgba(0,0,0,.08);
-
-}
-
-
-
-.category-icon{
-
-font-size:40px;
-margin-bottom:15px;
-
-}
-
-
-
-.category-card p{
-
-color:var(--muted);
-
-}
-
-
-
-
-
-.product-grid{
-
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:25px;
-
-}
-
-
-
-.product-card{
-
-background:white;
-border:1px solid var(--border);
-border-radius:25px;
-overflow:hidden;
-
-}
-
-
-
-.product-image{
-
-position:relative;
-
-}
-
-
-
-.product-image img{
-
-height:250px;
-width:100%;
-object-fit:cover;
-
-}
-
-
-
-.badge-verified{
-
-position:absolute;
-top:12px;
-left:12px;
-background:#16a34a;
-color:white;
-padding:6px 10px;
-border-radius:20px;
-font-size:12px;
-font-weight:700;
-
-}
-
-
-
-.wishlist-btn{
-
-position:absolute;
-top:12px;
-right:12px;
-background:white;
-border:none;
-width:38px;
-height:38px;
-border-radius:50%;
-font-size:20px;
-cursor:pointer;
-
-}
-
-
-
-.wishlist-btn.active{
-
-color:red;
-
-}
-
-
-
-.quick-preview{
-
-position:absolute;
-bottom:0;
-left:0;
-right:0;
-background:rgba(0,0,0,.6);
-padding:15px;
-text-align:center;
-opacity:0;
-transition:.3s;
-
-}
-
-
-
-.product-card:hover .quick-preview{
-
-opacity:1;
-
-}
-
-
-
-.quick-preview button{
-
-background:white;
-border:none;
-padding:8px 15px;
-border-radius:20px;
-font-weight:700;
-
-}
-
-
-
-.product-content{
-
-padding:20px;
-
-}
-
-
-
-.category-tag{
-
-color:var(--primary);
-font-weight:700;
-font-size:14px;
-
-}
-
-
-
-.product-content p{
-
-color:var(--muted);
-
-}
-
-
-
-.seller{
-
-margin:15px 0;
-font-size:14px;
-
-}
-
-
-
-.price-row{
-
-display:flex;
-justify-content:space-between;
-align-items:center;
-
-}
-
-
-
-.price-row h4{
-
-font-size:24px;
-
-}
-
-
-
-.quick-add{
-
-background:var(--primary);
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:20px;
-font-weight:700;
-cursor:pointer;
-
-}
-
-
-
-@media(max-width:1000px){
-
-.product-grid{
-
-grid-template-columns:repeat(2,1fr);
-
-}
-
-
-.category-grid{
-
-grid-template-columns:1fr 1fr;
-
-}
-
-}
-
-
-@media(max-width:600px){
-
 .product-grid,
-.category-grid{
-
-grid-template-columns:1fr;
-
-}
-
-}
-
-</style>
-
-<!-- =========================
-WHY HALO
-========================= -->
-
-<section id="features">
-
-<div class="container">
-
-
-<div class="section-title">
-
-<span>
-Why Halo Marketplace
-</span>
-
-<h2>
-Built For Modern Commerce
-</h2>
-
-<p>
-Everything buyers and sellers need in one secure marketplace.
-</p>
-
-</div>
-
-
-
-<div class="feature-grid">
-
-
-<div class="feature-card">
-<h3>🛡 Secure Payments</h3>
-<p>Stripe-powered payments with secure checkout protection.</p>
-</div>
-
-
-<div class="feature-card">
-<h3>🤖 AI Search</h3>
-<p>Find products faster with intelligent marketplace search.</p>
-</div>
-
-
-<div class="feature-card">
-<h3>✅ Verified Sellers</h3>
-<p>Shop confidently from trusted Canadian sellers.</p>
-</div>
-
-
-<div class="feature-card">
-<h3>🚚 Fast Shipping</h3>
-<p>Track orders and receive products across Canada.</p>
-</div>
-
-
-<div class="feature-card">
-<h3>💬 Messaging</h3>
-<p>Communicate safely with buyers and sellers.</p>
-</div>
-
-
-<div class="feature-card">
-<h3>📊 Analytics</h3>
-<p>Grow your store with sales insights.</p>
-</div>
-
-
-</div>
-
-</div>
-
-</section>
-
-
-
-
-
-<!-- =========================
-SELLER DASHBOARD
-========================= -->
-
-
-<section id="sell">
-
-
-<div class="container">
-
-
-<div class="seller-banner">
-
-
-<div>
-
-
-<h2>
-Launch Your Online Store
-</h2>
-
-
-<p>
-
-Sell products, manage orders, accept payments and grow your business with Halo Marketplace.
-
-</p>
-
-
-
-<ul>
-
-<li>✔ Unlimited Listings</li>
-<li>✔ Seller Dashboard</li>
-<li>✔ Stripe Payments</li>
-<li>✔ Sales Analytics</li>
-<li>✔ Customer Messaging</li>
-
-</ul>
-
-
-
-<a href="seller-dashboard.html" class="primary-btn">
-
-Open Seller Dashboard
-
-</a>
-
-
-</div>
-
-
-
-<img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200"
-alt="Seller dashboard">
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-<!-- =========================
-TOP STORES
-========================= -->
-
-
-<section id="stores">
-
-
-<div class="container">
-
-
-<div class="section-title">
-
-<span>
-Trusted Sellers
-</span>
-
-<h2>
-Popular Canadian Stores
-</h2>
-
-</div>
-
-
-
-
-<div class="store-grid">
-
-
-<div class="store-card">
-
-<h3>
-North Supply Co.
-</h3>
-
-<p>
-Electronics
-</p>
-
-<strong>
-★★★★★ 4.9
-</strong>
-
-<a href="store.html" class="primary-btn">
-Visit Store
-</a>
-
-</div>
-
-
-
-
-<div class="store-card">
-
-<h3>
-Urban Tech
-</h3>
-
-<p>
-Technology
-</p>
-
-<strong>
-★★★★★ 4.8
-</strong>
-
-<a href="store.html" class="primary-btn">
-Visit Store
-</a>
-
-</div>
-
-
-
-
-
-<div class="store-card">
-
-<h3>
-Modern Living
-</h3>
-
-<p>
-Home Products
-</p>
-
-<strong>
-★★★★★ 5.0
-</strong>
-
-<a href="store.html" class="primary-btn">
-Visit Store
-</a>
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-<!-- =========================
-FAQ
-========================= -->
-
-
-<section id="support">
-
-
-<div class="container">
-
-
-<div class="section-title">
-
-<span>
-Support
-</span>
-
-<h2>
-Frequently Asked Questions
-</h2>
-
-</div>
-
-
-
-
-<div class="faq-grid">
-
-
-<div class="faq-card">
-
-<h3>
-Is Halo free?
-</h3>
-
-<p>
-Creating an account is free. Sellers can choose marketplace plans.
-</p>
-
-</div>
-
-
-
-
-<div class="faq-card">
-
-<h3>
-Are payments secure?
-</h3>
-
-<p>
-Yes. Payments are processed securely through Stripe.
-</p>
-
-</div>
-
-
-
-
-<div class="faq-card">
-
-<h3>
-Can I sell across Canada?
-</h3>
-
-<p>
-Yes. Halo connects buyers and sellers nationwide.
-</p>
-
-</div>
-
-
-
-
-<div class="faq-card">
-
-<h3>
-Are sellers verified?
-</h3>
-
-<p>
-Verified sellers receive marketplace trust badges.
-</p>
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-<!-- =========================
-FOOTER
-========================= -->
-
-
-<footer>
-
-
-<div class="container">
-
-
-<div class="footer-grid">
-
-
-<div>
-
-<h2>
-Halo Marketplace
-</h2>
-
-<p>
-Canada's AI-powered marketplace for buyers, sellers and businesses.
-</p>
-
-</div>
-
-
-
-<div>
-
-<h3>
-Marketplace
-</h3>
-
-<a href="#marketplace">
-Products
-</a>
-
-<a href="#categories">
-Categories
-</a>
-
-<a href="#stores">
-Stores
-</a>
-
-</div>
-
-
-
-
-<div>
-
-<h3>
-Sellers
-</h3>
-
-<a href="#sell">
-Start Selling
-</a>
-
-<a href="seller-dashboard.html">
-Dashboard
-</a>
-
-</div>
-
-
-
-
-<div>
-
-<h3>
-Company
-</h3>
-
-<a href="about.html">
-About
-</a>
-
-<a href="privacy.html">
-Privacy
-</a>
-
-<a href="terms.html">
-Terms
-</a>
-
-</div>
-
-
-
-</div>
-
-
-
-<p class="copyright">
-
-© 2026 Halo Marketplace. All Rights Reserved.
-
-</p>
-
-
-</div>
-
-
-</footer>
-
-
-
-
-
-<!-- =========================
-TOAST
-========================= -->
-
-
-<div class="toast" id="toast"></div>
-
-
-
-
-
-<style>
-
-
-.feature-grid{
-
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:25px;
-
-}
-
-
-
-.feature-card,
-.store-card,
-.faq-card{
-
-background:white;
-border:1px solid var(--border);
-padding:30px;
-border-radius:25px;
-
-}
-
-
-
-.seller-banner{
-
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:50px;
-align-items:center;
-background:#eff6ff;
-padding:50px;
-border-radius:30px;
-
-}
-
-
-
-.seller-banner img{
-
-border-radius:25px;
-
-}
-
-
-
-.seller-banner li{
-
-margin:10px 0;
-
-}
-
-
-
-
+.category-grid,
+.feature-grid,
 .store-grid{
 
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:25px;
-
-}
-
-
-
-.store-card a{
-
-margin-top:20px;
-
-}
-
-
-
-.faq-grid{
-
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:25px;
-
-}
-
-
-
-footer{
-
-background:#111827;
-color:white;
-padding:70px 0;
-
-}
-
-
-
-.footer-grid{
-
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:30px;
-
-}
-
-
-
-.footer-grid a{
-
-display:block;
-margin:10px 0;
-color:#d1d5db;
-
-}
-
-
-
-.copyright{
-
-margin-top:40px;
-color:#9ca3af;
-
-}
-
-
-
-.toast{
-
-position:fixed;
-right:20px;
-bottom:20px;
-background:#111827;
-color:white;
-padding:15px 20px;
-border-radius:12px;
-opacity:0;
-transform:translateY(20px);
-transition:.3s;
-
-}
-
-
-
-.toast.show{
-
-opacity:1;
-transform:translateY(0);
-
-}
-
-
-
-@media(max-width:900px){
-
-.feature-grid,
-.store-grid,
-.faq-grid,
-.footer-grid,
-.seller-banner{
-
 grid-template-columns:1fr;
 
 }
 
-}
 
-</style>
+.hero h1{
 
-
-
-
-
-<script>
-
-
-function toggleWishlist(button){
-
-button.classList.toggle("active");
-
-
-button.innerHTML =
-button.classList.contains("active")
-? "♥"
-: "♡";
-
-
-showToast(
-button.classList.contains("active")
-? "Added to wishlist"
-: "Removed from wishlist"
-);
+font-size:40px;
 
 }
 
 
+.hero-buttons,
+.search-box{
 
-function addToCart(product){
-
-showToast(product + " added to cart");
-
-}
-
-
-
-function quickView(product){
-
-showToast("Preview: " + product);
+flex-direction:column;
 
 }
 
 
+.search-btn{
 
-function searchProducts(){
-
-let value =
-document.getElementById("searchInput").value;
-
-
-if(value){
-
-showToast("Searching for: " + value);
-
-}
-else{
-
-showToast("Enter a product to search");
+width:100%;
 
 }
 
 }
-
-
-
-
-function showToast(message){
-
-let toast =
-document.getElementById("toast");
-
-
-toast.innerHTML = message;
-
-
-toast.classList.add("show");
-
-
-setTimeout(()=>{
-
-toast.classList.remove("show");
-
-},2500);
-
-
-}
-
-
-</script>
-
-
-</body>
-
-</html>
