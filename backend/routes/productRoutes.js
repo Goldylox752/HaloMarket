@@ -1,18 +1,97 @@
-GET
-https://yourdomain.com/api/v1/products
+// ========================================
+// Halo Marketplace
+// routes/productRoutes.js
+// ========================================
 
 
-GET
-https://yourdomain.com/api/v1/products/123
+const router = require("express").Router();
 
 
-POST
-https://yourdomain.com/api/v1/products
+const {
+
+getProducts,
+getProduct,
+createProduct,
+updateProduct,
+deleteProduct,
+getSellerProducts
+
+} = require("../controllers/productController");
 
 
-PUT
-https://yourdomain.com/api/v1/products/123
+const {
+protect
+} = require("../middleware/auth");
 
 
-DELETE
-https://yourdomain.com/api/v1/products/123
+
+const {
+requireSeller
+} = require("../middleware/requireSeller");
+
+
+
+
+// Browse products
+
+router.get(
+"/",
+getProducts
+);
+
+
+
+// Single product
+
+router.get(
+"/:id",
+getProduct
+);
+
+
+
+// Seller create listing
+
+router.post(
+"/",
+protect,
+requireSeller,
+createProduct
+);
+
+
+
+// Seller dashboard
+
+router.get(
+"/seller",
+protect,
+requireSeller,
+getSellerProducts
+);
+
+
+
+// Update listing
+
+router.put(
+"/:id",
+protect,
+requireSeller,
+updateProduct
+);
+
+
+
+// Delete listing
+
+router.delete(
+"/:id",
+protect,
+requireSeller,
+deleteProduct
+);
+
+
+
+module.exports = router;
