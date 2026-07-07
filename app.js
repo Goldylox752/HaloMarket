@@ -10,6 +10,8 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
+const crypto = require("crypto");
+
 
 const helmet = require("helmet");
 const cors = require("cors");
@@ -19,7 +21,6 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 
 
-// Middleware
 
 const {
     notFound,
@@ -33,9 +34,23 @@ const app = express();
 
 
 
+
+// ========================================
+// CONFIG
+// ========================================
+
+
+const API_VERSION =
+process.env.API_VERSION || "v1";
+
+
+
+
+
 // ========================================
 // TRUST PROXY
 // ========================================
+
 
 app.set(
     "trust proxy",
@@ -44,23 +59,62 @@ app.set(
 
 
 
+
+
+
 // ========================================
-// SECURITY HEADERS
+// REQUEST ID
 // ========================================
+
+
+app.use((req,res,next)=>{
+
+
+req.id =
+crypto.randomUUID();
+
+
+res.setHeader(
+"X-Request-ID",
+req.id
+);
+
+
+next();
+
+
+});
+
+
+
+
+
+
+
+// ========================================
+// SECURITY
+// ========================================
+
 
 app.use(
 
-    helmet({
+helmet({
 
-        crossOriginResourcePolicy:{
+crossOriginResourcePolicy:{
+policy:"cross-origin"
+},
 
-            policy:"cross-origin"
 
-        }
+contentSecurityPolicy:false
 
-    })
+
+})
 
 );
+
+
+
+
 
 
 
@@ -69,84 +123,54 @@ app.use(
 // ========================================
 
 
-const allowedOrigins = [
+const origins = [
 
-    process.env.FRONTEND_URL,
+process.env.FRONTEND_URL,
 
-    "http://localhost:3000",
+"http://localhost:3000",
 
-    "http://localhost:5173"
+"http://localhost:5173"
 
 ].filter(Boolean);
 
 
 
+
 app.use(
 
-    cors({
+cors({
 
-        origin:(origin,callback)=>{
+origin:(origin,callback)=>{
 
 
-            if(!origin){
-
-                return callback(
-                    null,
-                    true
-                );
-
-            }
+if(!origin)
+return callback(null,true);
 
 
 
-            if(
-                allowedOrigins.includes(origin)
-            ){
-
-                return callback(
-                    null,
-                    true
-                );
-
-            }
+if(origins.includes(origin))
+return callback(null,true);
 
 
 
-            callback(
-                new Error(
-                    "CORS blocked"
-                )
-            );
+return callback(
+new Error("CORS blocked")
+);
 
 
-        },
+},
 
 
-        credentials:true,
+credentials:true
 
 
-        methods:[
-
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "OPTIONS"
-
-        ],
-
-
-        allowedHeaders:[
-
-            "Content-Type",
-            "Authorization"
-
-        ]
-
-    })
+})
 
 );
+
+
+
+
 
 
 
@@ -154,9 +178,13 @@ app.use(
 // PERFORMANCE
 // ========================================
 
+
 app.use(
-    compression()
+compression()
 );
+
+
+
 
 
 
@@ -164,19 +192,82 @@ app.use(
 // LOGGING
 // ========================================
 
+
 app.use(
 
-    morgan(
+morgan(
 
-        process.env.NODE_ENV === "production"
+process.env.NODE_ENV === "production"
 
-        ? "combined"
+? "combined"
 
-        : "dev"
+: "dev"
 
-    )
+)
 
 );
+
+
+
+
+
+
+// ========================================
+// STRIPE WEBHOOK
+// MUST BE BEFORE JSON
+// ========================================
+
+
+app.use(
+
+"/api/webhooks/stripe",
+
+express.raw({
+
+type:"application/json"
+
+}),
+
+require("./routes/webhookRoutes")
+
+);
+
+
+
+
+
+
+// ========================================
+// BODY PARSER
+// ========================================
+
+
+app.use(
+
+express.json({
+
+limit:"10mb"
+
+})
+
+);
+
+
+
+app.use(
+
+express.urlencoded({
+
+extended:true,
+
+limit:"10mb"
+
+})
+
+);
+
+
+
 
 
 
@@ -184,102 +275,42 @@ app.use(
 // COOKIES
 // ========================================
 
+
 app.use(
-    cookieParser()
+cookieParser()
 );
 
 
 
-// ========================================
-// STRIPE WEBHOOK
-// IMPORTANT:
-// Must be BEFORE express.json()
-// ========================================
 
-
-app.use(
-
-    "/api/webhooks/stripe",
-
-    express.raw({
-
-        type:"application/json"
-
-    }),
-
-    require(
-        "./routes/webhookRoutes"
-    )
-
-);
 
 
 
 // ========================================
-// REQUEST BODY
+// RATE LIMIT
 // ========================================
 
 
-app.use(
+const limiter = rateLimit({
 
-    express.json({
-
-        limit:"10mb"
-
-    })
-
-);
+windowMs:
+15 * 60 * 1000,
 
 
+max:
 
-app.use(
+process.env.NODE_ENV === "production"
 
-    express.urlencoded({
+?250
 
-        extended:true,
-
-        limit:"10mb"
-
-    })
-
-);
+:5000,
 
 
-
-// ========================================
-// RATE LIMITER
-// ========================================
+standardHeaders:true,
 
 
-const apiLimiter = rateLimit({
+legacyHeaders:false
 
-    windowMs:
-    15 * 60 * 1000,
-
-
-    max:
-
-    process.env.NODE_ENV === "production"
-
-    ?250
-
-    :5000,
-
-
-    standardHeaders:true,
-
-
-    legacyHeaders:false,
-
-
-    message:{
-
-        success:false,
-
-        message:
-        "Too many requests."
-
-    }
 
 });
 
@@ -287,31 +318,36 @@ const apiLimiter = rateLimit({
 
 app.use(
 
-    "/api",
+"/api",
 
-    apiLimiter
+limiter
 
 );
 
 
 
+
+
+
+
 // ========================================
-// STATIC FILES
+// STATIC
 // ========================================
 
 
 app.use(
 
-    "/uploads",
+"/uploads",
 
-    express.static(
+express.static(
 
-        path.join(
-            __dirname,
-            "uploads"
-        )
+path.join(
+__dirname,
+"uploads"
 
-    )
+)
+
+)
 
 );
 
@@ -319,16 +355,21 @@ app.use(
 
 app.use(
 
-    express.static(
+express.static(
 
-        path.join(
-            __dirname,
-            "public"
-        )
+path.join(
+__dirname,
+"public"
 
-    )
+)
+
+)
 
 );
+
+
+
+
 
 
 
@@ -339,230 +380,224 @@ app.use(
 
 app.get(
 
-    "/api/health",
+"/api/health",
 
-    (req,res)=>{
-
-
-        res.status(200).json({
-
-            success:true,
-
-            application:
-            "Halo Marketplace",
+(req,res)=>{
 
 
-            version:
-            process.env.npm_package_version
-            ||
-            "1.0.0",
+res.json({
+
+success:true,
+
+service:
+"Halo Marketplace API",
+
+status:
+"online",
+
+version:
+API_VERSION,
 
 
-            environment:
-            process.env.NODE_ENV
-            ||
-            "development",
+environment:
+process.env.NODE_ENV,
 
 
-            database:
-            "Supabase PostgreSQL",
+uptime:
+process.uptime(),
 
 
-            uptime:
-            process.uptime(),
+requestId:
+req.id,
 
 
-            timestamp:
-            new Date()
+timestamp:
+new Date()
 
-        });
+});
 
 
-    }
+}
 
 );
 
 
 
+
+
+
+app.get(
+
+"/api/ready",
+
+(req,res)=>{
+
+
+res.json({
+
+ready:true,
+
+database:
+"Supabase"
+
+});
+
+
+}
+
+);
+
+
+
+
+
+
+
 // ========================================
-// WEBSITE
+// FRONTEND
 // ========================================
 
 
 app.get(
 
-    "/",
+"/",
 
-    (req,res)=>{
-
-
-        res.sendFile(
-
-            path.join(
-
-                __dirname,
-
-                "public",
-
-                "index.html"
-
-            )
-
-        );
+(req,res)=>{
 
 
-    }
+res.sendFile(
+
+path.join(
+
+__dirname,
+
+"public",
+
+"index.html"
+
+)
+
+);
+
+
+}
 
 );
 
 
 
+
+
+
+
 // ========================================
-// API ROUTES
+// ROUTES
 // ========================================
 
 
 const routes = {
 
 
-    auth:"authRoutes",
+auth:"authRoutes",
 
-    users:"userRoutes",
+users:"userRoutes",
 
-    vendors:"vendorRoutes",
+vendors:"vendorRoutes",
 
-    products:"productRoutes",
+products:"productRoutes",
 
-    categories:"categoryRoutes",
+categories:"categoryRoutes",
 
-    brands:"brandRoutes",
+cart:"cartRoutes",
 
-    cart:"cartRoutes",
+checkout:"checkoutRoutes",
 
-    checkout:"checkoutRoutes",
+orders:"orderRoutes",
 
-    orders:"orderRoutes",
+payments:"paymentRoutes",
 
-    payments:"paymentRoutes",
+reviews:"reviewRoutes",
 
-    reviews:"reviewRoutes",
+wishlist:"wishlistRoutes",
 
-    wishlist:"wishlistRoutes",
+search:"searchRoutes",
 
-    search:"searchRoutes",
+messages:"messageRoutes",
 
-    notifications:"notificationRoutes",
-
-    admin:"adminRoutes",
-
-    messages:"messageRoutes",
-
-    chat:"chatRoutes",
-
-    analytics:"analyticsRoutes",
-
-    coupons:"couponRoutes"
+admin:"adminRoutes"
 
 
 };
 
 
 
+
+
 Object.entries(routes)
-.forEach(
 
-([route,file])=>{
-
-
-    app.use(
-
-        `/api/${route}`,
-
-        require(
-            `./routes/${file}`
-        )
-
-    );
+.forEach(([route,file])=>{
 
 
-})
+try{
+
+
+app.use(
+
+`/api/${API_VERSION}/${route}`,
+
+require(
+`./routes/${file}`
+)
 
 );
+
+
+
+}
+
+catch(error){
+
+
+console.warn(
+
+`⚠️ Route skipped: ${file}`,
+
+error.message
+
+);
+
+
+}
+
+
+
+});
+
+
+
+
 
 
 
 // ========================================
 // ERROR HANDLING
-// MUST BE LAST
 // ========================================
 
 
 app.use(
-    notFound
+notFound
 );
+
 
 
 app.use(
-    errorHandler
+errorHandler
 );
 
 
 
-// ========================================
-// PROCESS HANDLERS
-// ========================================
 
 
-process.on(
-
-    "unhandledRejection",
-
-    (error)=>{
-
-
-        console.error(
-
-            "Unhandled Promise Rejection:",
-
-            error
-
-        );
-
-
-    }
-
-);
-
-
-
-process.on(
-
-    "uncaughtException",
-
-    (error)=>{
-
-
-        console.error(
-
-            "Uncaught Exception:",
-
-            error
-
-        );
-
-
-        process.exit(1);
-
-
-    }
-
-);
-
-
-
-// ========================================
-// EXPORT
-// ========================================
 
 
 module.exports = app;
