@@ -1,54 +1,34 @@
-import Link from "next/link";
+export default function ProductCard({product}){
 
+return(
 
-export default function ProductCard({
+<div className="border rounded-2xl overflow-hidden hover:shadow-xl">
 
-id,
-title,
-price,
-location,
-image
+<div className="h-48 bg-gray-200 flex items-center justify-center">
 
-}){
+Product Image
 
-
-return (
-
-<div className="bg-white rounded-2xl shadow hover:shadow-xl transition p-6">
-
-
-<div className="text-6xl">
-{image}
 </div>
 
 
-<h3 className="mt-5 text-xl font-bold">
-{title}
+<div className="p-5">
+
+<h3 className="font-bold text-xl">
+{product.name}
 </h3>
 
 
-<p className="mt-2 text-indigo-600 font-bold text-lg">
-{price}
+<p className="text-gray-600">
+{product.location}
 </p>
 
 
-<p className="mt-2 text-gray-500">
-📍 {location}
+<p className="text-2xl font-black mt-3">
+${product.price}
 </p>
 
 
-
-<Link
-
-href={`/product/${id}`}
-
-className="block mt-5 text-center bg-indigo-600 text-white py-3 rounded-xl"
-
->
-
-View Product
-
-</Link>
+</div>
 
 
 </div>
