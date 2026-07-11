@@ -1,62 +1,54 @@
 import ProductCard from "./ProductCard";
 
 
-export default function FeaturedSection(){
-
-
 const products=[
-
 {
-title:"Apple MacBook Pro",
-price:"$1899",
-location:"Edmonton, AB",
-image:"💻"
+name:"iPhone 15 Pro",
+price:"999",
+location:"Toronto, ON"
 },
-
 {
-title:"Mountain Bike",
-price:"$750",
-location:"Calgary, AB",
-image:"🚲"
+name:"MacBook Pro",
+price:"1800",
+location:"Vancouver, BC"
 },
-
 {
-title:"Gaming PC Setup",
-price:"$2200",
-location:"Toronto, ON",
-image:"🎮"
+name:"DJI Drone",
+price:"899",
+location:"Calgary, AB"
 }
-
 ];
 
 
-return (
+export default function FeaturedSection(){
 
-<section className="max-w-7xl mx-auto px-6 py-20">
+return(
+
+<section className="py-20">
+
+<div className="max-w-7xl mx-auto px-6">
 
 
-<h2 className="text-4xl font-bold">
+<h2 className="text-4xl font-bold mb-10">
 Featured Products
 </h2>
 
 
-<div className="mt-10 grid md:grid-cols-3 gap-8">
+<div className="grid md:grid-cols-3 gap-8">
 
-
-{
-products.map(product=>(
+{products.map((p)=>(
 
 <ProductCard
-key={product.title}
-{...product}
+key={p.name}
+product={p}
 />
 
-))
-}
-
+))}
 
 </div>
 
+
+</div>
 
 </section>
 
