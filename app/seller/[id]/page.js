@@ -4,67 +4,55 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 
 
+async function getSeller(id:string){
 
-async function getSeller(id){
-
-
-const supabase = await createClient();
+  const supabase = await createClient();
 
 
-
-const {data: seller,error}=await supabase
-
-.from("profiles")
-
-.select("*")
-
-.eq("id",id)
-
-.single();
-
-
-
-if(error || !seller){
-
-return null;
-
-}
+  const {data:seller,error} = await supabase
+    .from("profiles")
+    .select(
+      `
+      id,
+      username,
+      store_name,
+      avatar,
+      location,
+      rating
+      `
+    )
+    .eq("id",id)
+    .single();
 
 
 
-const {data: products}=await supabase
-
-.from("products")
-
-.select("*")
-
-.eq("seller_id",id)
-
-.order(
-"created_at",
-{
-ascending:false
-}
-);
+  if(error || !seller){
+    return null;
+  }
 
 
 
-return {
+  const {data:products}=await supabase
+    .from("products")
+    .select("*")
+    .eq("seller_id",id)
+    .order("created_at",{
+      ascending:false
+    });
 
-seller,
 
-products:products || []
 
-};
-
+  return {
+    seller,
+    products:products ?? []
+  };
 
 }
 
 
 
 
-
-function formatPrice(price){
+function formatPrice(price:number){
 
 return new Intl.NumberFormat(
 "en-CA",
@@ -80,21 +68,21 @@ currency:"CAD"
 
 
 
-export default async function SellerPage({params}){
+export default async function SellerPage({
+params
+}:{
+params:{
+id:string
+}
+}){
 
 
-const {id}=await params;
-
-
-
-const data = await getSeller(id);
+const data = await getSeller(params.id);
 
 
 
 if(!data){
-
-notFound();
-
+  notFound();
 }
 
 
@@ -102,42 +90,33 @@ notFound();
 const {
 seller,
 products
-
 }=data;
-
 
 
 
 
 return (
 
-<main className="min-h-screen bg-gray-50 py-16 px-6">
+<main className="min-h-screen bg-gray-50 px-6 py-16">
 
 
 <div className="max-w-7xl mx-auto">
 
 
 
-
-
-{/* SELLER HEADER */}
-
+{/* SELLER PROFILE */}
 
 <section className="bg-white rounded-3xl shadow p-10">
 
 
-<div className="flex flex-col md:flex-row gap-6 items-center">
-
+<div className="flex flex-col md:flex-row items-center gap-8">
 
 
 <Image
 
-src={
-seller.avatar ||
-"/avatar.png"
-}
+src={seller.avatar || "/avatar.png"}
 
-alt="seller"
+alt={seller.username || "Seller"}
 
 width={120}
 
@@ -150,34 +129,37 @@ className="rounded-full"
 
 
 
-
 <div>
 
 
 <h1 className="text-4xl font-bold">
 
-{seller.username || "Halo Seller"}
+{seller.store_name || seller.username || "Halo Seller"}
 
 </h1>
 
 
+<p className="text-gray-600 mt-2">
 
-<p className="text-gray-500 mt-2">
+Seller: {seller.username}
+
+</p>
+
+
+<p className="mt-3">
 
 📍 {seller.location || "Canada"}
 
 </p>
 
 
-
 <p className="mt-3">
 
-⭐ {seller.rating || "5.0"} Seller Rating
+⭐ {seller.rating || "5.0"} Rating
 
 </p>
 
 
-
 </div>
 
 
@@ -186,17 +168,17 @@ className="rounded-full"
 
 
 
+<Link
 
-<button
+href={`/messages/new?seller=${seller.id}`}
 
-className="mt-8 bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold"
+className="inline-block mt-8 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-bold"
 
 >
 
 Message Seller
 
-</button>
-
+</Link>
 
 
 </section>
@@ -207,16 +189,14 @@ Message Seller
 
 
 
-
-{/* LISTINGS */}
-
+{/* PRODUCTS */}
 
 <section className="mt-12">
 
 
 <h2 className="text-3xl font-bold mb-8">
 
-Seller Listings
+Listings by {seller.store_name || seller.username}
 
 </h2>
 
@@ -224,7 +204,8 @@ Seller Listings
 
 
 
-{products.length === 0 ? (
+{
+products.length === 0 ?
 
 
 <div className="bg-white rounded-3xl p-10">
@@ -235,15 +216,13 @@ No listings yet.
 
 
 
-):(
-
-
+:
 
 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
 
-
-{products.map((product)=>(
+{
+products.map((product)=>(
 
 
 <Link
@@ -257,11 +236,11 @@ className="bg-white rounded-3xl shadow overflow-hidden hover:shadow-xl transitio
 >
 
 
-
 <div className="h-56 bg-gray-100">
 
 
-{product.image ? (
+{
+product.image ?
 
 
 <Image
@@ -279,37 +258,31 @@ className="w-full h-full object-cover"
 />
 
 
+:
 
-):(
 
-
-<div className="h-full flex items-center justify-center text-6xl">
+<div className="flex h-full items-center justify-center text-6xl">
 
 📦
 
 </div>
 
 
-)}
-
+}
 
 
 </div>
 
 
 
-
-
-
 <div className="p-5">
 
 
-<h3 className="font-bold text-lg">
+<h3 className="font-bold">
 
 {product.title}
 
 </h3>
-
 
 
 
@@ -321,14 +294,11 @@ className="w-full h-full object-cover"
 
 
 
-
 <p className="text-gray-500 mt-2">
 
 📍 {product.location}
 
 </p>
-
-
 
 
 </div>
@@ -338,21 +308,18 @@ className="w-full h-full object-cover"
 </Link>
 
 
+))
 
-))}
-
+}
 
 
 </div>
 
+}
 
-
-)}
 
 
 </section>
-
-
 
 
 </div>
@@ -360,6 +327,6 @@ className="w-full h-full object-cover"
 
 </main>
 
-)
+);
 
 }
