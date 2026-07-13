@@ -1,34 +1,59 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
 
-async function getProduct(id) {
 
-  const supabase = await createClient();
-
-
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      *,
-      profiles:seller_id(
-        username,
-        avatar,
-        rating,
-        location
-      )
-    `)
-    .eq("id", id)
-    .single();
+async function getProducts(searchParams){
 
 
-  if(error || !data){
-    return null;
-  }
+const supabase = await createClient();
 
 
-  return data;
+let query = supabase
+.from("products")
+.select("*")
+.order("created_at",{ascending:false});
+
+
+
+if(searchParams?.search){
+
+query=query.ilike(
+"title",
+`%${searchParams.search}%`
+);
+
+}
+
+
+
+if(searchParams?.category){
+
+query=query.eq(
+"category",
+searchParams.category
+);
+
+}
+
+
+
+const {data,error}=await query;
+
+
+
+if(error){
+
+console.log(error);
+
+return [];
+
+}
+
+
+
+return data || [];
 
 }
 
@@ -37,50 +62,169 @@ async function getProduct(id) {
 
 function formatPrice(price){
 
-return new Intl.NumberFormat("en-CA",{
+return new Intl.NumberFormat(
+"en-CA",
+{
 style:"currency",
 currency:"CAD"
-}).format(price || 0);
+}
+).format(price || 0);
 
 }
 
 
 
 
-export default async function ProductPage({params}){
+export default async function ProductsPage({
+searchParams
+}){
 
 
-const {id}=await params;
-
-
-const product = await getProduct(id);
-
-
-
-if(!product){
-
-notFound();
-
-}
-
+const products = await getProducts(
+await searchParams
+);
 
 
 
 return (
 
-<main className="min-h-screen bg-gray-50 py-16 px-6">
-
-
-<div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12">
+<main className="min-h-screen bg-gray-50 py-12 px-6">
 
 
 
-{/* PRODUCT IMAGE */}
+<div className="max-w-7xl mx-auto">
 
-<div className="bg-white rounded-3xl shadow p-10">
+
+
+{/* HEADER */}
+
+
+<div className="flex flex-col md:flex-row justify-between gap-5 mb-10">
+
+
+<div>
+
+
+<h1 className="text-5xl font-bold">
+
+Halo Marketplace
+
+</h1>
+
+
+<p className="text-gray-500 mt-3">
+
+Buy and sell anything across Canada.
+
+</p>
+
+
+</div>
+
+
+
+
+<Link
+
+href="/sell"
+
+className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold"
+
+>
+
++ Sell Item
+
+</Link>
+
+
+
+</div>
+
+
+
+
+
+
+{/* SEARCH */}
+
+
+<form className="bg-white p-5 rounded-2xl shadow mb-10">
+
+
+<input
+
+name="search"
+
+placeholder="Search products..."
+
+className="w-full border rounded-xl p-4"
+
+/>
+
+
+</form>
+
+
+
+
+
+
+
+{/* PRODUCTS */}
+
+
+
+{products.length === 0 ? (
+
+
+<div className="bg-white rounded-3xl p-10 text-center">
+
+<h2 className="text-2xl font-bold">
+
+No listings found
+
+</h2>
+
+
+<p className="text-gray-500 mt-2">
+
+Be the first seller on Halo.
+
+</p>
+
+
+</div>
+
+
+
+):(
+
+
+
+<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+
+{products.map((product)=>(
+
+
+<Link
+
+href={`/products/${product.id}`}
+
+key={product.id}
+
+className="bg-white rounded-3xl shadow hover:shadow-xl transition overflow-hidden"
+
+>
+
+
+
+
+<div className="h-60 bg-gray-100">
 
 
 {product.image ? (
+
 
 <Image
 
@@ -88,19 +232,20 @@ src={product.image}
 
 alt={product.title}
 
-width={900}
+width={500}
 
-height={700}
+height={400}
 
-className="rounded-2xl object-cover w-full h-[500px]"
+className="w-full h-full object-cover"
 
 />
+
 
 
 ):(
 
 
-<div className="h-[500px] flex items-center justify-center text-8xl">
+<div className="h-full flex items-center justify-center text-7xl">
 
 📦
 
@@ -117,22 +262,23 @@ className="rounded-2xl object-cover w-full h-[500px]"
 
 
 
-{/* DETAILS */}
 
 
-<div className="bg-white rounded-3xl shadow p-10">
+
+<div className="p-5">
 
 
-<h1 className="text-5xl font-bold">
+
+<h2 className="font-bold text-xl line-clamp-2">
 
 {product.title}
 
-</h1>
+</h2>
 
 
 
 
-<p className="mt-5 text-3xl text-indigo-600 font-bold">
+<p className="text-indigo-600 text-2xl font-bold mt-3">
 
 {formatPrice(product.price)}
 
@@ -141,7 +287,8 @@ className="rounded-2xl object-cover w-full h-[500px]"
 
 
 
-<p className="mt-4 text-gray-500">
+
+<p className="text-gray-500 mt-2">
 
 📍 {product.location || "Canada"}
 
@@ -150,94 +297,32 @@ className="rounded-2xl object-cover w-full h-[500px]"
 
 
 
-<div className="mt-8">
 
+<p className="text-sm text-gray-400 mt-3">
 
-<h2 className="text-2xl font-bold">
-
-Description
-
-</h2>
-
-
-
-<p className="mt-3 text-gray-600 leading-relaxed">
-
-{product.description || "No description available."}
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-{/* SELLER */}
-
-
-<div className="mt-10 border-t pt-6">
-
-
-<h2 className="font-bold text-xl">
-
-Seller
-
-</h2>
-
-
-
-<div className="mt-4">
-
-
-<p className="font-semibold text-lg">
-
-{
-product.profiles?.username ||
-"Verified Seller"
-}
+{product.condition || "Used"}
 
 </p>
 
 
 
-<p className="text-gray-500">
-
-⭐ {product.profiles?.rating || "5.0"}
-
-</p>
-
-
 </div>
 
 
 
 
-
-<button className="mt-6 w-full bg-indigo-600 text-white py-4 rounded-xl text-lg font-bold hover:bg-indigo-700">
-
-Message Seller
-
-</button>
+</Link>
 
 
 
-
-<button className="mt-4 w-full bg-black text-white py-4 rounded-xl text-lg font-bold hover:bg-gray-800">
-
-Buy Now
-
-</button>
-
-
-</div>
+))}
 
 
 
 </div>
+
+
+)}
 
 
 
@@ -246,7 +331,6 @@ Buy Now
 
 
 </main>
-
 
 )
 
