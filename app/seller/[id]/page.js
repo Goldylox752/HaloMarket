@@ -1,4 +1,83 @@
-import SellerProfile from "@/components/SellerProfile";
+import Image from "next/image";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+
+
+
+async function getSeller(id){
+
+
+const supabase = await createClient();
+
+
+
+const {data: seller,error}=await supabase
+
+.from("profiles")
+
+.select("*")
+
+.eq("id",id)
+
+.single();
+
+
+
+if(error || !seller){
+
+return null;
+
+}
+
+
+
+const {data: products}=await supabase
+
+.from("products")
+
+.select("*")
+
+.eq("seller_id",id)
+
+.order(
+"created_at",
+{
+ascending:false
+}
+);
+
+
+
+return {
+
+seller,
+
+products:products || []
+
+};
+
+
+}
+
+
+
+
+
+function formatPrice(price){
+
+return new Intl.NumberFormat(
+"en-CA",
+{
+style:"currency",
+currency:"CAD"
+}
+).format(price || 0);
+
+}
+
+
+
 
 
 export default async function SellerPage({params}){
@@ -7,54 +86,273 @@ export default async function SellerPage({params}){
 const {id}=await params;
 
 
+
+const data = await getSeller(id);
+
+
+
+if(!data){
+
+notFound();
+
+}
+
+
+
+const {
+seller,
+products
+
+}=data;
+
+
+
+
+
 return (
 
-<main className="bg-gray-50 min-h-screen py-16 px-6">
+<main className="min-h-screen bg-gray-50 py-16 px-6">
 
 
-<div className="max-w-5xl mx-auto">
+<div className="max-w-7xl mx-auto">
 
 
-<h1 className="text-5xl font-bold">
-Seller Profile
-</h1>
 
 
-<div className="mt-10">
+
+{/* SELLER HEADER */}
 
 
-<SellerProfile
+<section className="bg-white rounded-3xl shadow p-10">
 
-name="Byron Tech Store"
 
-location="Alberta, Canada"
+<div className="flex flex-col md:flex-row gap-6 items-center">
 
-rating="4.9"
+
+
+<Image
+
+src={
+seller.avatar ||
+"/avatar.png"
+}
+
+alt="seller"
+
+width={120}
+
+height={120}
+
+className="rounded-full"
 
 />
 
 
-</div>
 
 
-<div className="mt-12 bg-white rounded-2xl p-8">
+
+<div>
 
 
-<h2 className="text-3xl font-bold">
+<h1 className="text-4xl font-bold">
 
-Seller Products
+{seller.username || "Halo Seller"}
 
-</h2>
+</h1>
 
 
-<p className="mt-4 text-gray-600">
 
-Products will load from Supabase.
+<p className="text-gray-500 mt-2">
+
+📍 {seller.location || "Canada"}
 
 </p>
 
 
+
+<p className="mt-3">
+
+⭐ {seller.rating || "5.0"} Seller Rating
+
+</p>
+
+
+
 </div>
+
+
+</div>
+
+
+
+
+
+<button
+
+className="mt-8 bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold"
+
+>
+
+Message Seller
+
+</button>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+{/* LISTINGS */}
+
+
+<section className="mt-12">
+
+
+<h2 className="text-3xl font-bold mb-8">
+
+Seller Listings
+
+</h2>
+
+
+
+
+
+{products.length === 0 ? (
+
+
+<div className="bg-white rounded-3xl p-10">
+
+No listings yet.
+
+</div>
+
+
+
+):(
+
+
+
+<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+
+
+{products.map((product)=>(
+
+
+<Link
+
+key={product.id}
+
+href={`/products/${product.id}`}
+
+className="bg-white rounded-3xl shadow overflow-hidden hover:shadow-xl transition"
+
+>
+
+
+
+<div className="h-56 bg-gray-100">
+
+
+{product.image ? (
+
+
+<Image
+
+src={product.image}
+
+alt={product.title}
+
+width={500}
+
+height={400}
+
+className="w-full h-full object-cover"
+
+/>
+
+
+
+):(
+
+
+<div className="h-full flex items-center justify-center text-6xl">
+
+📦
+
+</div>
+
+
+)}
+
+
+
+</div>
+
+
+
+
+
+
+<div className="p-5">
+
+
+<h3 className="font-bold text-lg">
+
+{product.title}
+
+</h3>
+
+
+
+
+<p className="text-indigo-600 font-bold text-xl mt-2">
+
+{formatPrice(product.price)}
+
+</p>
+
+
+
+
+<p className="text-gray-500 mt-2">
+
+📍 {product.location}
+
+</p>
+
+
+
+
+</div>
+
+
+
+</Link>
+
+
+
+))}
+
+
+
+</div>
+
+
+
+)}
+
+
+</section>
+
+
 
 
 </div>
