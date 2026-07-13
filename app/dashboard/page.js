@@ -1,123 +1,65 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 
+async function getDashboardData() {
 
-async function getDashboardData(){
-
-
-const supabase = await createClient();
+  const supabase = await createClient();
 
 
-
-const {
-data:{
-user
-}
-
-}=await supabase.auth.getUser();
+  const {
+    data:{
+      user
+    }
+  } = await supabase.auth.getUser();
 
 
 
-if(!user){
-
-redirect("/login");
-
-}
+  if(!user){
+    redirect("/login");
+  }
 
 
 
-
-const {data:profile}=await supabase
-
-.from("profiles")
-
-.select("*")
-
-.eq("id",user.id)
-
-.single();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
 
 
-
-
-const {data:listings}=await supabase
-
-.from("products")
-
-.select("*")
-
-.eq("seller_id",user.id)
-
-.order(
-"created_at",
-{
-ascending:false
-}
-);
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .eq("seller_id", user.id)
+    .order("created_at", {
+      ascending:false
+    });
 
 
 
-
-
-const {data:sales}=await supabase
-
-.from("orders")
-
-.select(`
-
-*,
-
-products(
-
-title,
-
-image
-
-)
-
-`)
-
-.eq(
-"seller_id",
-user.id
-)
-
-.order(
-"created_at",
-{
-ascending:false
-}
-);
+  const { data: favorites } = await supabase
+    .from("favorites")
+    .select("*")
+    .eq("user_id", user.id);
 
 
 
-
-
-return {
-
-profile,
-
-listings:listings || [],
-
-sales:sales || []
-
-};
-
+  return {
+    user,
+    profile,
+    products: products ?? [],
+    favorites: favorites ?? []
+  };
 
 }
 
 
 
-
-
-
-
-function formatPrice(price){
-
+function formatPrice(price:number){
 
 return new Intl.NumberFormat(
 "en-CA",
@@ -125,15 +67,9 @@ return new Intl.NumberFormat(
 style:"currency",
 currency:"CAD"
 }
-
 ).format(price || 0);
 
-
 }
-
-
-
-
 
 
 
@@ -141,78 +77,135 @@ export default async function DashboardPage(){
 
 
 const {
-
+user,
 profile,
-
-listings,
-
-sales
-
+products,
+favorites
 }=await getDashboardData();
 
 
 
+return (
 
-const revenue = sales.reduce(
-
-(total,item)=>
-
-total + Number(item.amount || 0),
-
-0
-
-);
-
-
-
-
-
-
-
-return(
-
-<main className="min-h-screen bg-gray-50 p-10">
-
-
+<main className="min-h-screen bg-gray-50 px-6 py-12">
 
 <div className="max-w-7xl mx-auto">
 
 
+<section className="bg-white rounded-3xl shadow p-8">
 
 
+<div className="flex items-center gap-6">
 
-<div className="flex justify-between items-center">
+
+<Image
+
+src={
+profile?.avatar ??
+"/avatar.png"
+}
+
+alt="Profile"
+
+width={100}
+
+height={100}
+
+className="rounded-full"
+
+/>
 
 
 
 <div>
 
+<h1 className="text-4xl font-bold">
 
-<h1 className="text-5xl font-black">
-
-Seller Dashboard
+Welcome back {profile?.username ?? "Seller"}
 
 </h1>
 
 
-<p className="text-gray-500 mt-3">
+<p className="text-gray-500">
+{user.email}
+</p>
 
-Welcome back {profile?.username || "Seller"}
 
+<p className="mt-2">
+📍 {profile?.location ?? "Canada"}
 </p>
 
 
 </div>
 
 
+</div>
+
+
+</section>
+
+
+
+
+
+<section className="grid md:grid-cols-3 gap-6 mt-8">
+
+
+<div className="bg-white rounded-3xl shadow p-6">
+
+<p className="text-gray-500">
+Listings
+</p>
+
+<h2 className="text-4xl font-bold">
+{products.length}
+</h2>
+
+</div>
+
+
+
+<div className="bg-white rounded-3xl shadow p-6">
+
+<p className="text-gray-500">
+Favorites
+</p>
+
+<h2 className="text-4xl font-bold">
+{favorites.length}
+</h2>
+
+</div>
+
+
+
+
+<div className="bg-white rounded-3xl shadow p-6">
+
+<p className="text-gray-500">
+Rating
+</p>
+
+<h2 className="text-4xl font-bold">
+⭐ {profile?.rating ?? "5.0"}
+</h2>
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+<section className="grid md:grid-cols-3 gap-6 mt-8">
 
 
 <Link
-
-href="/sell"
-
-className="bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold"
-
+href="/sell/create"
+className="bg-indigo-600 text-white rounded-2xl p-6 text-xl font-bold"
 >
 
 + Create Listing
@@ -221,127 +214,63 @@ className="bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold"
 
 
 
-</div>
+<Link
+href="/messages"
+className="bg-black text-white rounded-2xl p-6 text-xl font-bold"
+>
 
+💬 Messages
 
+</Link>
 
 
 
+<Link
+href="/favorites"
+className="bg-white shadow rounded-2xl p-6 text-xl font-bold"
+>
 
+❤️ Favorites
 
+</Link>
 
 
-{/* STATS */}
+</section>
 
 
 
-<div className="grid md:grid-cols-3 gap-6 mt-10">
-
-
-
-<div className="bg-white p-8 rounded-2xl shadow">
-
-
-<h2 className="text-4xl font-black">
-
-{listings.length}
-
-</h2>
-
-
-<p className="text-gray-500">
-
-Listings
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div className="bg-white p-8 rounded-2xl shadow">
-
-
-<h2 className="text-4xl font-black">
-
-{sales.length}
-
-</h2>
-
-
-<p className="text-gray-500">
-
-Sales
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div className="bg-white p-8 rounded-2xl shadow">
-
-
-<h2 className="text-4xl font-black">
-
-{formatPrice(revenue)}
-
-</h2>
-
-
-<p className="text-gray-500">
-
-Revenue
-
-</p>
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{/* LISTINGS */}
 
 
 
 <section className="mt-12">
 
 
-<h2 className="text-3xl font-black mb-6">
-
+<h2 className="text-3xl font-bold mb-6">
 My Listings
-
 </h2>
 
 
 
-<div className="grid md:grid-cols-4 gap-6">
+{
+products.length === 0 ? (
 
+<div className="bg-white rounded-3xl p-8">
+
+No listings yet.
+
+</div>
+
+)
+
+:
+
+(
+
+<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
 
 {
-
-listings.map((product)=>(
+products.map((product)=>(
 
 
 <Link
@@ -350,18 +279,16 @@ key={product.id}
 
 href={`/products/${product.id}`}
 
-className="bg-white rounded-2xl shadow overflow-hidden"
+className="bg-white rounded-3xl shadow overflow-hidden"
 
 >
 
 
-<div className="h-48 bg-gray-100">
+<div className="h-48">
 
 
 {
-
-product.image ? (
-
+product.image ?
 
 <Image
 
@@ -377,10 +304,7 @@ className="w-full h-full object-cover"
 
 />
 
-
-
-):(
-
+:
 
 <div className="flex items-center justify-center h-full text-5xl">
 
@@ -388,171 +312,47 @@ className="w-full h-full object-cover"
 
 </div>
 
-
-)
-
 }
-
 
 
 </div>
 
 
 
-
-
 <div className="p-5">
 
-
 <h3 className="font-bold">
-
 {product.title}
-
 </h3>
 
 
-<p className="text-indigo-600 font-bold mt-2">
+<p className="text-indigo-600 font-bold">
 
 {formatPrice(product.price)}
 
 </p>
 
 
-<p className="text-sm text-gray-500">
-
-{product.status || "active"}
-
-</p>
-
-
 </div>
-
-
 
 
 </Link>
 
 
-
 ))
-
 
 }
 
 
-
 </div>
-
-
-</section>
-
-
-
-
-
-
-
-
-
-{/* SALES */}
-
-
-
-<section className="mt-12">
-
-
-<h2 className="text-3xl font-black mb-6">
-
-Recent Sales
-
-</h2>
-
-
-
-<div className="bg-white rounded-3xl shadow">
-
-
-
-{
-
-sales.length === 0 ? (
-
-
-<p className="p-8 text-gray-500">
-
-No sales yet.
-
-</p>
-
-
-
-):(
-
-
-
-sales.map((sale)=>(
-
-
-<div
-
-key={sale.id}
-
-className="p-6 border-b flex justify-between"
-
->
-
-
-<div>
-
-
-<h3 className="font-bold">
-
-{sale.products?.title}
-
-</h3>
-
-
-<p className="text-gray-500">
-
-Status: {sale.status}
-
-</p>
-
-
-</div>
-
-
-
-
-<p className="font-bold text-indigo-600">
-
-{formatPrice(sale.amount)}
-
-</p>
-
-
-
-</div>
-
-
-
-))
-
 
 )
 
-
 }
 
 
 
-</div>
-
-
 </section>
-
-
-
 
 
 </div>
@@ -561,6 +361,5 @@ Status: {sale.status}
 </main>
 
 )
-
 
 }
