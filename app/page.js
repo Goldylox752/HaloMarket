@@ -1,452 +1,515 @@
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-async function getProduct(id) {
-  const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .single();
 
-  if (error || !data) return null;
+async function getDashboardData(){
 
-  return data;
+
+const supabase = await createClient();
+
+
+
+const {
+data:{
+user
 }
 
-function formatPrice(price) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-    maximumFractionDigits: 0,
-  }).format(price || 0);
+}=await supabase.auth.getUser();
+
+
+
+if(!user){
+
+redirect("/login");
+
 }
 
-function timeAgo(date) {
-  const now = new Date();
-  const posted = new Date(date);
 
-  const hours = Math.floor((now - posted) / 1000 / 60 / 60);
 
-  if (hours < 1) return "Just now";
-  if (hours < 24)
-    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
 
-  const days = Math.floor(hours / 24);
 
-  if (days < 30)
-    return `${days} day${days === 1 ? "" : "s"} ago`;
+const {data:profile}=await supabase
 
-  return posted.toLocaleDateString("en-CA");
+.from("profiles")
+
+.select("*")
+
+.eq("id",user.id)
+
+.single();
+
+
+
+
+
+
+const {data:products}=await supabase
+
+.from("products")
+
+.select("*")
+
+.eq("seller_id",user.id)
+
+.order(
+"created_at",
+{
+ascending:false
+}
+);
+
+
+
+
+
+
+const {data:favorites}=await supabase
+
+.from("favorites")
+
+.select("*")
+
+.eq("user_id",user.id);
+
+
+
+
+
+return {
+
+user,
+
+profile,
+
+products:products || [],
+
+favorites:favorites || []
+
+};
+
+
 }
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
 
-  const product = await getProduct(id);
 
-  if (!product) {
-    return {
-      title: "Product Not Found | Halo Marketplace",
-    };
-  }
 
-  return {
-    title: `${product.title} | Halo Marketplace`,
-    description:
-      product.description ||
-      `${product.title} available on Halo Marketplace.`,
-  };
+function formatPrice(price){
+
+return new Intl.NumberFormat(
+"en-CA",
+{
+style:"currency",
+currency:"CAD"
+}
+).format(price || 0);
+
 }
 
-export default async function ProductPage({ params }) {
-  const { id } = await params;
 
-  const product = await getProduct(id);
 
-  if (!product) {
-    notFound();
-  }
 
-  return (
-    <main className="min-h-screen bg-gray-50">
 
-      <div className="mx-auto max-w-7xl px-6 py-10">
+export default async function DashboardPage(){
 
-        <Link
-          href="/products"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
-        >
-          ← Back to Marketplace
-        </Link>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-3">
+const {
 
-          {/* LEFT COLUMN */}
+user,
 
-          <div className="lg:col-span-2">
+profile,
 
-            {/* PRODUCT IMAGE */}
+products,
 
-            <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+favorites
 
-              <div className="relative aspect-square">
+}=await getDashboardData();
 
-                {product.image_url ? (
-                  <Image
-                    src={product.image_url}
-                    alt={product.title}
-                    fill
-                    priority
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-gray-100 text-gray-400">
-                    No Image Available
-                  </div>
-                )}
 
-              </div>
 
-            </div>
 
-            {/* IMAGE THUMBNAILS */}
 
-            <div className="mt-4 flex gap-3">
+return (
 
-              {[1,2,3,4].map((item)=>(
-                <div
-                  key={item}
-                  className="h-20 w-20 overflow-hidden rounded-xl border bg-white"
-                >
-                  {product.image_url ? (
-                    <Image
-                      src={product.image_url}
-                      alt={product.title}
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : null}
-                </div>
-              ))}
+<main className="min-h-screen bg-gray-50 py-12 px-6">
 
-            </div>
 
-            {/* DESCRIPTION */}
+<div className="max-w-7xl mx-auto">
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h2 className="text-2xl font-bold">
-                Description
-              </h2>
 
-              <p className="mt-5 whitespace-pre-line leading-8 text-gray-600">
-                {product.description || "No description has been provided for this listing."}
-              </p>
 
-            </div>
 
-            {/* PRODUCT DETAILS */}
+{/* HEADER */}
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h2 className="mb-6 text-2xl font-bold">
-                Product Details
-              </h2>
+<section className="bg-white rounded-3xl shadow p-8">
 
-              <div className="grid grid-cols-2 gap-6 text-sm">
 
-                <div>
-                  <p className="text-gray-500">Condition</p>
-                  <p className="font-semibold">
-                    {product.condition || "Excellent"}
-                  </p>
-                </div>
+<div className="flex flex-col md:flex-row items-center gap-6">
 
-                <div>
-                  <p className="text-gray-500">Category</p>
-                  <p className="font-semibold">
-                    {product.category || "General"}
-                  </p>
-                </div>
 
-                <div>
-                  <p className="text-gray-500">Brand</p>
-                  <p className="font-semibold">
-                    {product.brand || "Not specified"}
-                  </p>
-                </div>
 
-                <div>
-                  <p className="text-gray-500">Location</p>
-                  <p className="font-semibold">
-                    {product.location || "Canada"}
-                  </p>
-                </div>
+<Image
 
-              </div>
+src={
+profile?.avatar ||
+"/avatar.png"
+}
 
-            </div>
-            {/* RELATED PRODUCTS */}
+alt="profile"
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
+width={100}
 
-              <h2 className="text-2xl font-bold">
-                Similar Listings
-              </h2>
+height={100}
 
-              <p className="mt-2 text-sm text-gray-500">
-                More items you may be interested in.
-              </p>
+className="rounded-full"
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+/>
 
-                {[1,2,3,4].map((item) => (
 
-                  <div
-                    key={item}
-                    className="overflow-hidden rounded-2xl border bg-white transition hover:-translate-y-1 hover:shadow-lg"
-                  >
 
-                    <div className="relative aspect-square bg-gray-100">
 
-                      {product.image_url ? (
+<div>
 
-                        <Image
-                          src={product.image_url}
-                          alt={product.title}
-                          fill
-                          className="object-cover"
-                        />
 
-                      ) : (
+<h1 className="text-4xl font-bold">
 
-                        <div className="flex h-full items-center justify-center text-gray-400">
-                          No Image
-                        </div>
+Welcome back,
 
-                      )}
+{" "}
 
-                    </div>
+{profile?.username || "Seller"}
 
-                    <div className="p-4">
+</h1>
 
-                      <p className="text-lg font-bold">
-                        {formatPrice(product.price)}
-                      </p>
 
-                      <p className="mt-1 line-clamp-2 font-medium">
-                        {product.title}
-                      </p>
 
-                      <p className="mt-2 text-sm text-gray-500">
-                        {product.location || "Canada"}
-                      </p>
+<p className="text-gray-500 mt-2">
 
-                    </div>
+{user.email}
 
-                  </div>
+</p>
 
-                ))}
 
-              </div>
 
-            </div>
 
-          </div>
+<p className="mt-3">
 
-          {/* RIGHT COLUMN */}
+📍 {profile?.location || "Canada"}
 
-          <aside>
+</p>
 
-            <div className="sticky top-24 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h1 className="text-3xl font-bold">
-                {product.title}
-              </h1>
+</div>
 
-              <p className="mt-4 text-4xl font-extrabold text-blue-600">
-                {formatPrice(product.price)}
-              </p>
 
-              <div className="mt-6 space-y-3 text-gray-600">
 
-                <div className="flex items-center gap-2">
-                  📍
-                  <span>{product.location || "Canada"}</span>
-                </div>
+</div>
 
-                <div className="flex items-center gap-2">
-                  🕒
-                  <span>{timeAgo(product.created_at)}</span>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  👁️
-                  <span>142 Views</span>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  ❤️
-                  <span>19 Saves</span>
-                </div>
+</section>
 
-              </div>
 
-              <div className="mt-8 space-y-3">
 
-                <button className="w-full rounded-xl bg-blue-600 py-4 font-semibold text-white transition hover:bg-blue-700">
 
-                  Contact Seller
 
-                </button>
 
-                <button className="w-full rounded-xl border py-4 font-semibold transition hover:bg-gray-50">
 
-                  ❤️ Save Listing
+{/* STATS */}
 
-                </button>
 
-                <button className="w-full rounded-xl border py-4 font-semibold transition hover:bg-gray-50">
+<section className="grid md:grid-cols-3 gap-6 mt-8">
 
-                  📤 Share Listing
 
-                </button>
+<div className="bg-white rounded-3xl shadow p-6">
 
-              </div>
 
-              <div className="mt-8 rounded-2xl bg-green-50 p-5">
+<h3 className="text-gray-500">
 
-                <h3 className="font-bold text-green-700">
-                  Buyer Protection
-                </h3>
+Listings
 
-                <ul className="mt-3 space-y-2 text-sm text-gray-600">
+</h3>
 
-                  <li>✔ Verified Marketplace Listing</li>
 
-                  <li>✔ Meet in a public place</li>
+<p className="text-4xl font-bold mt-2">
 
-                  <li>✔ Inspect before paying</li>
+{products.length}
 
-                  <li>✔ Report suspicious listings</li>
+</p>
 
-                </ul>
 
-              </div>
+</div>
 
-            </div>
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h2 className="text-xl font-bold">
-                Seller Information
-              </h2>
 
-              <div className="mt-6 flex items-center gap-4">
 
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-700">
+<div className="bg-white rounded-3xl shadow p-6">
 
-                  H
 
-                </div>
+<h3 className="text-gray-500">
 
-                <div>
+Favorites
 
-                  <p className="font-semibold">
-                    Halo Marketplace Seller
-                  </p>
+</h3>
 
-                  <p className="text-sm text-gray-500">
-                    ★★★★★ 4.9 Rating
-                  </p>
 
-                  <p className="text-sm text-gray-500">
-                    Member since 2024
-                  </p>
+<p className="text-4xl font-bold mt-2">
 
-                  <p className="text-sm text-gray-500">
-                    Usually replies within an hour
-                  </p>
+{favorites.length}
 
-                </div>
+</p>
 
-              </div>
 
-              <button className="mt-6 w-full rounded-xl border py-3 font-semibold transition hover:bg-gray-50">
+</div>
 
-                View Seller Profile
 
-              </button>
 
-            </div>
-            {/* AI PRICE INSIGHTS */}
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h2 className="text-xl font-bold">
-                🤖 Halo AI Insights
-              </h2>
+<div className="bg-white rounded-3xl shadow p-6">
 
-              <div className="mt-5 space-y-4">
 
-                <div className="rounded-xl bg-green-50 p-4">
-                  <p className="font-semibold text-green-700">
-                    Great Price
-                  </p>
+<h3 className="text-gray-500">
 
-                  <p className="mt-1 text-sm text-gray-600">
-                    Based on similar listings, this price appears competitive.
-                  </p>
-                </div>
+Seller Rating
 
-                <div className="rounded-xl bg-blue-50 p-4">
-                  <p className="font-semibold text-blue-700">
-                    Popular Category
-                  </p>
+</h3>
 
-                  <p className="mt-1 text-sm text-gray-600">
-                    Items like this typically receive strong buyer interest.
-                  </p>
-                </div>
 
-              </div>
+<p className="text-4xl font-bold mt-2">
 
-            </div>
+⭐ {profile?.rating || "5.0"}
 
-            {/* MARKETPLACE SAFETY */}
+</p>
 
-            <div className="mt-8 rounded-3xl border bg-white p-8 shadow-sm">
 
-              <h2 className="text-xl font-bold">
-                Marketplace Safety
-              </h2>
+</div>
 
-              <ul className="mt-5 space-y-3 text-sm text-gray-600">
 
-                <li>✅ Meet in a public place.</li>
 
-                <li>✅ Inspect the item before paying.</li>
+</section>
 
-                <li>✅ Never send money in advance.</li>
 
-                <li>✅ Use Halo Marketplace messaging whenever possible.</li>
 
-              </ul>
 
-            </div>
 
-          </aside>
 
-        </div>
 
-      </div>
 
-    </main>
+{/* ACTIONS */}
 
-  );
+
+<section className="grid md:grid-cols-3 gap-6 mt-8">
+
+
+<Link
+
+href="/sell"
+
+className="bg-indigo-600 text-white rounded-2xl p-6 font-bold text-xl"
+
+>
+
++ Create Listing
+
+</Link>
+
+
+
+
+<Link
+
+href="/messages"
+
+className="bg-black text-white rounded-2xl p-6 font-bold text-xl"
+
+>
+
+💬 Messages
+
+</Link>
+
+
+
+
+
+<Link
+
+href="/favorites"
+
+className="bg-white shadow rounded-2xl p-6 font-bold text-xl"
+
+>
+
+❤️ Favorites
+
+</Link>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+{/* MY PRODUCTS */}
+
+
+
+<section className="mt-12">
+
+
+<h2 className="text-3xl font-bold mb-6">
+
+My Listings
+
+</h2>
+
+
+
+
+
+{products.length === 0 ? (
+
+
+<div className="bg-white rounded-3xl p-8">
+
+You have no listings yet.
+
+</div>
+
+
+
+):(
+
+
+
+<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+
+
+{products.map((product)=>(
+
+
+<Link
+
+key={product.id}
+
+href={`/products/${product.id}`}
+
+className="bg-white rounded-3xl shadow overflow-hidden hover:shadow-xl"
+
+>
+
+
+
+<div className="h-48 bg-gray-100">
+
+
+{
+
+product.image ? (
+
+
+<Image
+
+src={product.image}
+
+alt={product.title}
+
+width={400}
+
+height={300}
+
+className="w-full h-full object-cover"
+
+/>
+
+
+):(
+
+
+<div className="flex h-full items-center justify-center text-6xl">
+
+📦
+
+</div>
+
+
+)
+
+}
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="p-5">
+
+
+<h3 className="font-bold">
+
+{product.title}
+
+</h3>
+
+
+
+
+<p className="text-indigo-600 font-bold mt-2">
+
+{formatPrice(product.price)}
+
+</p>
+
+
+
+</div>
+
+
+
+</Link>
+
+
+
+))}
+
+
+
+</div>
+
+
+
+)}
+
+
+
+</section>
+
+
+
+
+</div>
+
+
+
+</main>
+
+)
+
 }
