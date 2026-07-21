@@ -4,30 +4,100 @@ import "./globals.css";
 
 
 export const metadata = {
-  title: "Halo Market | Buy & Sell Across Canada",
+
+  title: {
+    default: "Halo Market | Buy & Sell Across Canada",
+    template: "%s | Halo Market",
+  },
+
   description:
-    "A modern Canadian marketplace to buy, sell, and discover products.",
+    "Halo Market is Canada's modern marketplace to buy, sell, and discover products from trusted sellers.",
+
+
+  keywords: [
+    "Canadian marketplace",
+    "buy and sell Canada",
+    "online marketplace",
+    "classifieds Canada",
+    "sell products online",
+    "shopping Canada",
+  ],
+
+
+  openGraph: {
+
+    title:
+      "Halo Market | Buy & Sell Across Canada",
+
+    description:
+      "A modern Canadian marketplace connecting buyers and sellers.",
+
+    siteName:
+      "Halo Market",
+
+    type:
+      "website",
+
+  },
+
+
+  twitter: {
+
+    card:
+      "summary_large_image",
+
+    title:
+      "Halo Market | Buy & Sell Across Canada",
+
+    description:
+      "Discover products and sell online across Canada.",
+
+  },
+
+
 };
 
 
-export default function RootLayout({children}) {
 
-return (
+export const viewport = {
 
-<html lang="en">
+  width: "device-width",
 
-<body>
+  initialScale: 1,
 
-<Navbar />
+  themeColor: "#4f46e5",
 
-{children}
+};
 
-<Footer />
 
-</body>
 
-</html>
+export default function RootLayout({ children }) {
 
-);
+  return (
+
+    <html lang="en">
+
+      <body className="min-h-screen bg-gray-50 antialiased">
+
+
+        <Navbar />
+
+
+        <main>
+
+          {children}
+
+        </main>
+
+
+        <Footer />
+
+
+      </body>
+
+
+    </html>
+
+  );
 
 }
