@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
+import BuyButton from "@/components/BuyButton";
+
 
 
 async function getProduct(slug){
@@ -9,7 +12,10 @@ async function getProduct(slug){
   const supabase = await createClient();
 
 
-  const {data,error}=await supabase
+  const {
+    data,
+    error
+  } = await supabase
 
   .from("products")
 
@@ -23,10 +29,14 @@ async function getProduct(slug){
     category,
     slug,
     seller_id,
+    status,
     created_at
   `)
 
-  .eq("slug",slug)
+  .eq(
+    "slug",
+    slug
+  )
 
   .single();
 
@@ -47,20 +57,20 @@ async function getProduct(slug){
 
 
 
-
 async function getSeller(id){
 
-  if(!id){
-
-    return null;
-
-  }
+  if(!id) return null;
 
 
-  const supabase = await createClient();
+  const supabase =
+  await createClient();
 
 
-  const {data,error}=await supabase
+
+  const {
+    data,
+    error
+  } = await supabase
 
   .from("profiles")
 
@@ -74,7 +84,10 @@ async function getSeller(id){
     location
   `)
 
-  .eq("id",id)
+  .eq(
+    "id",
+    id
+  )
 
   .single();
 
@@ -113,7 +126,6 @@ currency:"CAD"
 
 
 
-
 export async function generateMetadata({params}){
 
 
@@ -128,10 +140,15 @@ await getProduct(slug);
 return {
 
 title:
+
 product
+
 ?
+
 `${product.title} | Halo Marketplace`
+
 :
+
 "Halo Marketplace"
 
 };
@@ -173,6 +190,8 @@ product.seller_id
 
 
 
+
+
 return (
 
 <main className="
@@ -183,17 +202,22 @@ py-12
 ">
 
 
+
 <div className="
 mx-auto
 grid
-max-w-6xl
-gap-8
+max-w-7xl
+gap-10
 lg:grid-cols-3
 ">
 
 
 
-{/* PRODUCT */}
+
+
+
+{/* IMAGE + DETAILS */}
+
 
 
 <section className="
@@ -203,14 +227,16 @@ lg:col-span-2
 
 <div className="
 relative
-h-[450px]
+h-[500px]
 overflow-hidden
 rounded-3xl
 bg-white
 ">
 
 
-{product.image ? (
+{
+
+product.image ?
 
 <Image
 
@@ -220,29 +246,34 @@ alt={product.title}
 
 fill
 
-className="object-cover"
+priority
+
+className="
+object-cover
+"
 
 />
 
-):(
-
+:
 
 <div className="
 flex
 h-full
 items-center
 justify-center
-text-6xl
+text-7xl
 ">
 
 📦
 
 </div>
 
-)}
+}
 
 
 </div>
+
+
 
 
 
@@ -253,6 +284,14 @@ mt-8
 rounded-3xl
 bg-white
 p-8
+">
+
+
+
+<div className="
+flex
+justify-between
+items-center
 ">
 
 
@@ -270,17 +309,33 @@ font-bold
 </span>
 
 
+<span className="
+text-sm
+text-gray-500
+">
+
+🛡️ Buyer Protection
+
+</span>
+
+
+</div>
+
+
+
+
 
 
 <h1 className="
-mt-5
-text-4xl
+mt-6
+text-5xl
 font-black
 ">
 
 {product.title}
 
 </h1>
+
 
 
 
@@ -297,9 +352,10 @@ text-gray-500
 
 
 
+
 <p className="
 mt-6
-text-4xl
+text-5xl
 font-black
 ">
 
@@ -310,18 +366,61 @@ font-black
 
 
 
-<p className="
+
+
+
+<div className="
 mt-8
+">
+
+<BuyButton
+
+productId={product.id}
+
+/>
+
+</div>
+
+
+
+
+
+
+<div className="
+mt-8
+border-t
+pt-8
+">
+
+
+<h2 className="
+text-2xl
+font-black
+">
+
+Description
+
+</h2>
+
+
+<p className="
+mt-4
 leading-relaxed
 text-gray-700
 ">
 
-{product.description || "No description available."}
+{product.description ||
+"No description provided."}
 
 </p>
 
 
 </div>
+
+
+
+</div>
+
 
 
 </section>
@@ -332,7 +431,9 @@ text-gray-700
 
 
 
-{/* SELLER */}
+
+{/* SELLER CARD */}
+
 
 
 <aside className="
@@ -340,7 +441,9 @@ h-fit
 rounded-3xl
 bg-white
 p-8
+shadow-sm
 ">
+
 
 
 <h2 className="
@@ -364,6 +467,29 @@ gap-4
 ">
 
 
+
+{
+
+seller?.avatar ?
+
+<Image
+
+src={seller.avatar}
+
+width={64}
+
+height={64}
+
+alt="Seller"
+
+className="
+rounded-full
+"
+
+/>
+
+:
+
 <div className="
 flex
 h-16
@@ -379,14 +505,16 @@ text-2xl
 
 </div>
 
+}
+
 
 
 
 <div>
 
 <h3 className="
-font-black
 text-xl
+font-black
 ">
 
 {seller?.username || "Halo Seller"}
@@ -395,11 +523,13 @@ text-xl
 
 
 
+{
 
-{seller?.verified && (
+seller?.verified && (
 
-<p className="
-mt-1
+<span className="
+inline-block
+mt-2
 rounded-full
 bg-green-100
 px-3
@@ -411,9 +541,11 @@ text-green-700
 
 ✓ Verified Seller
 
-</p>
+</span>
 
-)}
+)
+
+}
 
 
 </div>
@@ -431,7 +563,8 @@ text-green-700
 mt-6
 rounded-2xl
 bg-gray-100
-p-4
+p-5
+space-y-2
 ">
 
 
@@ -446,11 +579,13 @@ p-4
 
 
 <p>
-📍 {seller?.location || product.location}
+📍 {seller?.location || product.location || "Canada"}
 </p>
 
 
 </div>
+
+
 
 
 
@@ -475,9 +610,10 @@ text-white
 
 >
 
-Message Seller
+💬 Message Seller
 
 </Link>
+
 
 
 
@@ -501,9 +637,13 @@ font-bold
 
 >
 
-View Store
+🏪 View Store
 
 </Link>
+
+
+
+
 
 
 </aside>
@@ -518,5 +658,6 @@ View Store
 </main>
 
 );
+
 
 }
