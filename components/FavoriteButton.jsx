@@ -2,14 +2,20 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 
-export default function FavoriteButton({ productId }) {
+export default function FavoriteButton({
+  productId
+}){
 
 
 const [saved,setSaved] = useState(false);
 
 const [loading,setLoading] = useState(false);
+
+const router = useRouter();
+
 
 
 
@@ -17,6 +23,7 @@ async function toggleFavorite(){
 
 
 setLoading(true);
+
 
 
 const supabase = createClient();
@@ -27,16 +34,13 @@ const {
 data:{
 user
 }
-
 } = await supabase.auth.getUser();
 
 
 
 if(!user){
 
-alert("Please login to save favourites.");
-
-setLoading(false);
+router.push("/login");
 
 return;
 
@@ -46,7 +50,25 @@ return;
 
 
 
-if(saved){
+const {
+data:existing
+} = await supabase
+
+.from("favorites")
+
+.select("id")
+
+.eq("user_id",user.id)
+
+.eq("product_id",productId)
+
+.single();
+
+
+
+
+
+if(existing){
 
 
 await supabase
@@ -55,9 +77,7 @@ await supabase
 
 .delete()
 
-.eq("user_id", user.id)
-
-.eq("product_id", productId);
+.eq("id",existing.id);
 
 
 
@@ -91,6 +111,8 @@ setSaved(true);
 
 setLoading(false);
 
+router.refresh();
+
 
 }
 
@@ -106,16 +128,34 @@ onClick={toggleFavorite}
 
 disabled={loading}
 
-className="w-full rounded-xl border py-4 font-bold transition hover:bg-gray-100"
+className="
+w-full
+rounded-xl
+border
+py-4
+font-bold
+transition
+hover:bg-gray-100
+"
 
 >
 
+{
 
-{saved ? "❤️ Saved" : "🤍 Add to Favourites"}
+loading
+
+? "Saving..."
+
+: saved
+
+? "❤️ Saved"
+
+: "🤍 Add to Favorites"
+
+}
 
 
 </button>
-
 
 );
 
