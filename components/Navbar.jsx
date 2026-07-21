@@ -1,163 +1,247 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import MobileMenu from "./MobileMenu";
 
 
 export default function Navbar() {
 
-  const links = [
-    {
-      name: "Marketplace",
-      href: "/marketplace",
-    },
-    {
-      name: "Products",
-      href: "/products",
-    },
-    {
-      name: "Categories",
-      href: "/categories",
-    },
-    {
-      name: "Sell",
-      href: "/sell",
-    },
-    {
-      name: "Seller Center",
-      href: "/seller",
-    },
-    {
-      name: "Support",
-      href: "/support",
-    },
-  ];
 
-
-  const accountLinks = [
-    {
-      name: "❤️ Favourites",
-      href: "/favourites",
-    },
-    {
-      name: "💬 Messages",
-      href: "/messages",
-    },
-    {
-      name: "📦 Orders",
-      href: "/orders",
-    },
-    {
-      name: "📊 Dashboard",
-      href: "/dashboard",
-    },
-  ];
-
-
-  return (
-
-    <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
-
-
-      <div className="mx-auto max-w-7xl px-6 py-4">
-
-
-        <div className="flex items-center justify-between">
-
-
-          {/* LOGO */}
-
-          <Link
-            href="/"
-            className="text-2xl font-black tracking-tight"
-          >
-            Halo Market
-          </Link>
+const [open,setOpen] = useState(false);
 
 
 
-          {/* DESKTOP LINKS */}
+const links = [
 
-          <nav className="hidden items-center gap-6 lg:flex">
+{
+name:"Home",
+href:"/"
+},
 
-            {links.map((link) => (
+{
+name:"Marketplace",
+href:"/marketplace"
+},
 
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-semibold transition hover:text-indigo-600"
-              >
-                {link.name}
-              </Link>
+{
+name:"Products",
+href:"/products"
+},
 
-            ))}
+{
+name:"Categories",
+href:"/categories"
+},
 
-          </nav>
+{
+name:"Sell",
+href:"/sell"
+},
+
+{
+name:"Seller Center",
+href:"/seller"
+},
+
+{
+name:"Support",
+href:"/support"
+},
+
+];
+
+
+
+return (
+
+
+<header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
+
+
+<div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+
+
+
+{/* LOGO */}
+
+<Link
+href="/"
+className="text-3xl font-black"
+>
+Halo Market
+</Link>
 
 
 
 
-          {/* ACCOUNT BUTTONS */}
 
-          <div className="hidden items-center gap-3 lg:flex">
+{/* DESKTOP LINKS */}
 
-
-            <Link
-              href="/login"
-              className="rounded-xl border px-5 py-2 font-semibold transition hover:bg-gray-100"
-            >
-              Login
-            </Link>
+<nav className="hidden items-center gap-6 lg:flex">
 
 
-            <Link
-              href="/signup"
-              className="rounded-xl bg-indigo-600 px-5 py-2 font-bold text-white transition hover:bg-indigo-700"
-            >
-              Sign Up
-            </Link>
+{links.map((link)=>(
 
 
-          </div>
+<Link
+
+key={link.href}
+
+href={link.href}
+
+className="text-sm font-semibold hover:text-indigo-600"
+
+>
+
+{link.name}
+
+</Link>
 
 
-
-          {/* MOBILE */}
-
-          <button
-            aria-label="Open menu"
-            className="rounded-lg border px-3 py-2 lg:hidden"
-          >
-            ☰
-          </button>
+))}
 
 
-        </div>
+</nav>
 
 
 
 
-        {/* ACCOUNT MENU */}
 
-        <div className="mt-4 hidden gap-5 border-t pt-4 text-sm lg:flex">
+{/* ACCOUNT LINKS */}
 
-          {accountLinks.map((link) => (
-
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-semibold text-gray-600 hover:text-indigo-600"
-            >
-              {link.name}
-            </Link>
-
-          ))}
-
-        </div>
+<div className="hidden items-center gap-3 lg:flex">
 
 
-      </div>
+
+<Link
+
+href="/favourites"
+
+className="font-semibold hover:text-indigo-600"
+
+>
+❤️
+</Link>
 
 
-    </header>
 
-  );
+
+<Link
+
+href="/messages"
+
+className="font-semibold hover:text-indigo-600"
+
+>
+💬
+</Link>
+
+
+
+
+<Link
+
+href="/orders"
+
+className="font-semibold hover:text-indigo-600"
+
+>
+📦
+</Link>
+
+
+
+
+<Link
+
+href="/dashboard"
+
+className="font-semibold hover:text-indigo-600"
+
+>
+📊
+</Link>
+
+
+
+
+
+<Link
+
+href="/login"
+
+className="rounded-xl border px-5 py-2 font-semibold hover:bg-gray-100"
+
+>
+
+Login
+
+</Link>
+
+
+
+
+
+<Link
+
+href="/signup"
+
+className="rounded-xl bg-indigo-600 px-5 py-2 font-bold text-white hover:bg-indigo-700"
+
+>
+
+Sign Up
+
+</Link>
+
+
+
+</div>
+
+
+
+
+
+
+{/* MOBILE BUTTON */}
+
+
+<button
+
+onClick={()=>setOpen(!open)}
+
+className="rounded-lg border px-3 py-2 lg:hidden"
+
+>
+
+{open ? "✕" : "☰"}
+
+</button>
+
+
+
+</div>
+
+
+
+
+{/* MOBILE LINKS */}
+
+<MobileMenu
+
+open={open}
+
+setOpen={setOpen}
+
+/>
+
+
+
+</header>
+
+
+);
+
 
 }
