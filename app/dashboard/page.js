@@ -1,7 +1,50 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+
+// ─── Server Actions ──────────────────────────────────────────────
+
+// Logout
+async function logout() {
+  "use server";
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}
+
+// Delete product (soft delete – set status to 'inactive')
+async function deleteProduct(formData: FormData) {
+  "use server";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const productId = formData.get("productId")?.toString();
+  if (!productId) return;
+
+  // Soft delete: update status to 'inactive'
+  const { error } = await supabase
+    .from("products")
+    .update({ status: "inactive" })
+    .eq("id", productId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("Delete error:", error);
+    // Optionally redirect with error
+  }
+
+  // Refresh the dashboard
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
+}
+
+// ─── Data Fetching ──────────────────────────────────────────────
 
 async function getDashboardData() {
   const supabase = await createClient();
@@ -9,27 +52,23 @@ async function getDashboardData() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
-  // Fetch profile (optional; if missing, we'll still show dashboard)
+  // Profile (fallback if missing)
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  // Optional: role check – if you have a 'role' column, uncomment below
-  // if (profile?.role !== "seller") redirect("/");
-
-  // Fetch user's products (using user_id)
+  // User's products
   const { data: products } = await supabase
     .from("products")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // Fetch favorites (if you have a 'favorites' table)
+  // Favorites (if table exists)
   const { data: favorites } = await supabase
     .from("favorites")
     .select("*")
@@ -43,6 +82,8 @@ async function getDashboardData() {
   };
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────
+
 function formatPrice(price: number) {
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -50,13 +91,7 @@ function formatPrice(price: number) {
   }).format(price || 0);
 }
 
-// Server action for logout
-async function logout() {
-  "use server";
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/");
-}
+// ─── Page Component ─────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const { user, profile, products, favorites } = await getDashboardData();
@@ -159,7 +194,7 @@ export default async function DashboardPage() {
               {products.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white rounded-3xl shadow overflow-hidden"
+                  className="bg-white rounded-3xl shadow overflow-hidden flex flex-col"
                 >
                   <Link href={`/product/${product.slug || product.id}`}>
                     <div className="h-48 bg-gray-100 relative">
@@ -186,6 +221,34 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                   </Link>
+
+                  {/* Edit & Delete buttons */}
+                  <div className="px-5 pb-5 flex gap-2 mt-auto">
+                    <Link
+                      href={`/product/edit/${product.slug}`}
+                      className="flex-1 text-center bg-gray-200 hover:bg-gray-300 rounded-xl py-2 text-sm font-bold transition"
+                    >
+                      Edit
+                    </Link>
+                    <form action={deleteProduct} className="flex-1">
+                      <input type="hidden" name="productId" value={product.id} />
+                      <button
+                        type="submit"
+                        className="w-full bg-red-100 hover:bg-red-200 text-red-700 rounded-xl py-2 text-sm font-bold transition"
+                        onClick={(e) => {
+                          if (
+                            !confirm(
+                              "Are you sure you want to delete this listing?"
+                            )
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ))}
             </div>
