@@ -14,146 +14,255 @@ async function getProducts(
   page
 ){
 
-const supabase = await createClient();
+  const supabase = await createClient();
 
 
-const limit = 12;
-
-const start = (Number(page) - 1) * limit;
-
-const end = start + limit - 1;
+  const limit = 12;
 
 
+  const start =
+  (Number(page)-1) * limit;
 
-let query = supabase
 
-.from("products")
-
-.select(`
-id,
-title,
-price,
-image,
-location,
-slug,
-category
-`);
+  const end =
+  start + limit - 1;
 
 
 
 
+  let query = supabase
 
-if(search){
+  .from("products")
 
-query = query.ilike(
-"title",
-`%${search}%`
-);
+  .select(`
+    id,
+    title,
+    price,
+    image,
+    location,
+    slug,
+    category,
+    seller_id,
+    featured,
+    created_at
+  `);
+
+
+
+
+
+
+  if(search){
+
+    query = query.ilike(
+      "title",
+      `%${search}%`
+    );
+
+  }
+
+
+
+
+
+  if(category){
+
+    query = query.eq(
+      "category",
+      category
+    );
+
+  }
+
+
+
+
+
+  if(location){
+
+    query = query.ilike(
+      "location",
+      `%${location}%`
+    );
+
+  }
+
+
+
+
+
+  if(minPrice){
+
+    query = query.gte(
+      "price",
+      Number(minPrice)
+    );
+
+  }
+
+
+
+
+
+  if(maxPrice){
+
+    query = query.lte(
+      "price",
+      Number(maxPrice)
+    );
+
+  }
+
+
+
+
+
+
+  if(sort === "low"){
+
+    query = query.order(
+      "price",
+      {
+        ascending:true
+      }
+    );
+
+
+  } else if(sort === "high"){
+
+
+    query = query.order(
+      "price",
+      {
+        ascending:false
+      }
+    );
+
+
+  } else {
+
+
+    query = query.order(
+      "created_at",
+      {
+        ascending:false
+      }
+    );
+
+
+  }
+
+
+
+
+
+
+
+  const {
+    data,
+    error
+  } = await query.range(
+    start,
+    end
+  );
+
+
+
+
+
+  if(error){
+
+    console.error(error);
+
+    return [];
+
+  }
+
+
+
+
+  return data || [];
 
 }
 
 
 
-if(category){
-
-query = query.eq(
-"category",
-category
-);
-
-}
 
 
 
-if(location){
 
-query = query.ilike(
-"location",
-`%${location}%`
-);
+async function getSeller(id){
 
-}
+  if(!id){
 
+    return null;
 
-
-if(minPrice){
-
-query = query.gte(
-"price",
-Number(minPrice)
-);
-
-}
+  }
 
 
 
-if(maxPrice){
+  const supabase =
+  await createClient();
 
-query = query.lte(
-"price",
-Number(maxPrice)
-);
 
-}
+
+
+  const {
+    data,
+    error
+  } = await supabase
+
+  .from("profiles")
+
+  .select(`
+    username,
+    avatar,
+    verified
+  `)
+
+  .eq(
+    "id",
+    id
+  )
+
+  .single();
 
 
 
 
 
-if(sort === "low"){
+  if(error){
 
-query = query.order(
-"price",
-{
-ascending:true
-}
-);
+    return null;
+
+  }
 
 
-}else if(sort === "high"){
 
-query = query.order(
-"price",
-{
-ascending:false
-}
-);
+  return data;
 
-
-}else{
-
-query = query.order(
-"created_at",
-{
-ascending:false
-}
-);
 
 }
 
 
 
 
-const {
-data:products,
-error
-}= await query.range(start,end);
 
 
 
-if(error){
+function formatPrice(price){
 
-console.log(error);
+  return new Intl.NumberFormat(
+    "en-CA",
+    {
+      style:"currency",
+      currency:"CAD"
+    }
+  ).format(price || 0);
 
-return [];
 
 }
 
-
-
-return products || [];
-
-}
 
 
 
@@ -162,10 +271,13 @@ return products || [];
 
 export const metadata = {
 
-title:"Browse Listings | Halo Marketplace",
+
+title:
+"Browse Listings | Halo Marketplace",
+
 
 description:
-"Find products and deals from local sellers."
+"Search and discover products from verified Canadian sellers."
 
 };
 
@@ -174,29 +286,51 @@ description:
 
 
 
+
 export default async function BrowsePage({
-searchParams
+  searchParams
 }){
 
 
-const search = searchParams?.search || "";
-
-const category = searchParams?.category || "";
-
-const location = searchParams?.location || "";
-
-const minPrice = searchParams?.minPrice || "";
-
-const maxPrice = searchParams?.maxPrice || "";
-
-const sort = searchParams?.sort || "new";
-
-const page = searchParams?.page || 1;
+const params =
+await searchParams;
 
 
 
+const search =
+params?.search || "";
 
-const products = await getProducts(
+
+const category =
+params?.category || "";
+
+
+const location =
+params?.location || "";
+
+
+const minPrice =
+params?.minPrice || "";
+
+
+const maxPrice =
+params?.maxPrice || "";
+
+
+const sort =
+params?.sort || "new";
+
+
+const page =
+params?.page || 1;
+
+
+
+
+
+
+const products =
+await getProducts(
 search,
 category,
 location,
@@ -211,7 +345,21 @@ page
 
 
 
+const productsWithSellers =
+await Promise.all(
 
+products.map(async(product)=>({
+
+...product,
+
+seller:
+await getSeller(
+product.seller_id
+)
+
+}))
+
+);
 const createUrl = (newPage)=>{
 
 return `/browse?search=${search}&category=${category}&location=${location}&minPrice=${minPrice}&maxPrice=${maxPrice}&sort=${sort}&page=${newPage}`;
@@ -221,41 +369,66 @@ return `/browse?search=${search}&category=${category}&location=${location}&minPr
 
 
 
+const categories = [
+
+"Electronics",
+"Vehicles",
+"Home",
+"Gaming",
+"Tools",
+"Sports",
+"Other"
+
+];
+
+
+
+
 
 
 
 return (
 
-<main className="min-h-screen bg-gray-50">
+<main className="
+min-h-screen
+bg-gray-50
+">
 
 
 
 
+
+
+
+{/* HERO */}
 
 
 <section className="
 bg-black
-text-white
-py-16
 px-6
+py-16
+text-white
 ">
 
 
 <div className="
-max-w-6xl
 mx-auto
 flex
+max-w-7xl
+flex-col
 justify-between
-items-center
 gap-8
+md:flex-row
+md:items-center
 ">
 
 
 <div>
 
+
 <h1 className="
 text-5xl
-font-bold
+font-black
 ">
 
 Browse Halo Marketplace
@@ -263,17 +436,23 @@ Browse Halo Marketplace
 </h1>
 
 
+
 <p className="
 mt-4
+max-w-xl
+text-lg
 text-gray-300
 ">
 
-Find deals from sellers near you.
+Discover products from Canadian sellers with verified accounts.
 
 </p>
 
 
 </div>
+
+
+
 
 
 
@@ -284,15 +463,16 @@ href="/sell"
 className="
 rounded-xl
 bg-white
-px-6
-py-3
+px-8
+py-4
+text-center
 font-bold
 text-black
 "
 
 >
 
-Sell Something
++ Sell Item
 
 </Link>
 
@@ -309,9 +489,14 @@ Sell Something
 
 
 
+
+
+{/* FILTERS */}
+
+
 <section className="
-max-w-6xl
 mx-auto
+max-w-7xl
 px-6
 py-10
 ">
@@ -324,15 +509,16 @@ action="/browse"
 className="
 grid
 gap-4
-rounded-2xl
+rounded-3xl
 bg-white
 p-6
 shadow
 md:grid-cols-6
 "
 
-
 >
+
+
 
 
 <input
@@ -341,7 +527,7 @@ name="search"
 
 defaultValue={search}
 
-placeholder="Search..."
+placeholder="Search products..."
 
 className="
 rounded-xl
@@ -351,6 +537,9 @@ py-3
 "
 
 />
+
+
+
 
 
 
@@ -371,32 +560,36 @@ py-3
 
 >
 
+
 <option value="">
 Category
 </option>
 
-<option>
-Electronics
+
+
+{categories.map(item=>(
+
+
+<option
+
+key={item}
+
+value={item}
+
+>
+
+{item}
+
 </option>
 
-<option>
-Vehicles
-</option>
 
-<option>
-Home
-</option>
-
-<option>
-Gaming
-</option>
-
-<option>
-Other
-</option>
+))}
 
 
 </select>
+
+
+
 
 
 
@@ -417,20 +610,29 @@ py-3
 
 >
 
+
 <option value="">
 Location
 </option>
+
 
 <option>
 Alberta
 </option>
 
+
 <option>
 Ontario
 </option>
 
+
 <option>
 British Columbia
+</option>
+
+
+<option>
+Quebec
 </option>
 
 
@@ -440,15 +642,17 @@ British Columbia
 
 
 
+
+
 <input
 
 name="minPrice"
 
+type="number"
+
 defaultValue={minPrice}
 
-placeholder="Min $"
-
-type="number"
+placeholder="Min price"
 
 className="
 rounded-xl
@@ -458,6 +662,9 @@ py-3
 "
 
 />
+
+
+
 
 
 
@@ -466,11 +673,11 @@ py-3
 
 name="maxPrice"
 
+type="number"
+
 defaultValue={maxPrice}
 
-placeholder="Max $"
-
-type="number"
+placeholder="Max price"
 
 className="
 rounded-xl
@@ -480,6 +687,9 @@ py-3
 "
 
 />
+
+
+
 
 
 
@@ -500,13 +710,16 @@ py-3
 
 >
 
+
 <option value="new">
 Newest
 </option>
 
+
 <option value="low">
 Lowest Price
 </option>
+
 
 <option value="high">
 Highest Price
@@ -517,19 +730,21 @@ Highest Price
 
 
 
+
+
+
 <button
 
 className="
 rounded-xl
 bg-black
-px-5
 font-bold
 text-white
 "
 
 >
 
-Filter
+Search
 
 </button>
 
@@ -547,77 +762,99 @@ Filter
 
 
 
+{/* RESULTS HEADER */}
+
+
+
 <section className="
-max-w-6xl
 mx-auto
+max-w-7xl
 px-6
-pb-20
 ">
 
 
 <div className="
-flex
-justify-between
-items-center
 mb-8
+flex
+items-center
+justify-between
 ">
 
 
 <h2 className="
 text-3xl
-font-bold
+font-black
 ">
 
-Listings
+Latest Listings
 
 </h2>
 
 
+
+<p className="
+text-gray-500
+">
+
+{products.length} results
+
+</p>
+
+
+
 </div>
-
-
-
+{/* ================= PRODUCT GRID ================= */}
 
 
 {
-products.length === 0 ? (
+productsWithSellers.length === 0 ? (
 
 
 <div className="
-rounded-2xl
+rounded-3xl
 bg-white
 p-12
 text-center
 ">
 
-<h2 className="
+
+<h3 className="
 text-2xl
-font-bold
+font-black
 ">
 
 No listings found
 
-</h2>
+</h3>
+
+
+<p className="
+mt-3
+text-gray-500
+">
+
+Try changing your filters.
+
+</p>
 
 
 </div>
 
 
-):(
+
+) : (
+
 
 
 <div className="
 grid
-grid-cols-1
+gap-6
 sm:grid-cols-2
 lg:grid-cols-4
-gap-6
 ">
 
 
-{
-
-products.map(product=>(
+{productsWithSellers.map(product=>(
 
 
 <Link
@@ -627,27 +864,31 @@ key={product.id}
 href={`/product/${product.slug}`}
 
 className="
+group
 overflow-hidden
-rounded-2xl
+rounded-3xl
+border
 bg-white
-shadow-sm
 transition
+hover:-translate-y-1
 hover:shadow-xl
 "
 
 >
 
 
+
+{/* IMAGE */}
+
+
 <div className="
 relative
-h-56
+h-60
 bg-gray-100
 ">
 
 
-{
-
-product.image ? (
+{product.image ? (
 
 <Image
 
@@ -657,12 +898,15 @@ alt={product.title}
 
 fill
 
-className="object-cover"
+className="
+object-cover
+transition
+group-hover:scale-105
+"
 
 />
 
-
-):(
+) : (
 
 
 <div className="
@@ -670,17 +914,42 @@ flex
 h-full
 items-center
 justify-center
-text-gray-400
+text-5xl
 ">
 
-No Image
+📦
 
 </div>
 
 
-)
+)}
 
-}
+
+
+
+
+
+{product.featured && (
+
+<span className="
+absolute
+left-4
+top-4
+rounded-full
+bg-black
+px-3
+py-1
+text-xs
+font-bold
+text-white
+">
+
+⭐ Featured
+
+</span>
+
+
+)}
 
 
 
@@ -690,13 +959,40 @@ No Image
 
 
 
-<div className="p-5">
+
+
+{/* DETAILS */}
+
+
+<div className="
+p-5
+">
+
+
+<span className="
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-xs
+font-bold
+">
+
+{product.category || "General"}
+
+</span>
+
+
+
+
+
 
 
 <h3 className="
+mt-4
 truncate
-font-bold
 text-lg
+font-black
 ">
 
 {product.title}
@@ -705,15 +1001,23 @@ text-lg
 
 
 
+
+
+
+
 <p className="
 mt-3
-text-xl
+text-2xl
 font-black
 ">
 
-${Number(product.price).toLocaleString("en-CA")}
+{formatPrice(product.price)}
 
 </p>
+
+
+
+
 
 
 
@@ -723,9 +1027,113 @@ text-sm
 text-gray-500
 ">
 
-📍 {product.location}
+📍 {product.location || "Canada"}
 
 </p>
+
+
+
+
+
+
+
+{/* SELLER TRUST */}
+
+
+<div className="
+mt-5
+flex
+items-center
+gap-3
+border-t
+pt-4
+">
+
+
+
+
+
+{product.seller?.avatar ? (
+
+<Image
+
+src={product.seller.avatar}
+
+alt="Seller"
+
+width={36}
+
+height={36}
+
+className="
+rounded-full
+"
+
+/>
+
+) : (
+
+
+<div className="
+flex
+h-9
+w-9
+items-center
+justify-center
+rounded-full
+bg-gray-200
+">
+
+👤
+
+</div>
+
+
+)}
+
+
+
+
+
+
+
+<div>
+
+
+<p className="
+text-sm
+font-bold
+">
+
+{product.seller?.username || "Halo Seller"}
+
+</p>
+
+
+
+
+
+{product.seller?.verified && (
+
+<p className="
+text-xs
+font-bold
+text-green-600
+">
+
+✓ Verified Seller
+
+</p>
+
+
+)}
+
+
+</div>
+
+
+</div>
+
 
 
 
@@ -735,9 +1143,7 @@ text-gray-500
 </Link>
 
 
-))
-
-}
+))}
 
 
 
@@ -754,17 +1160,19 @@ text-gray-500
 
 
 
+{/* PAGINATION */}
+
+
+
 <div className="
+mt-12
 flex
 justify-center
 gap-4
-mt-12
 ">
 
 
-{
-
-Number(page) > 1 && (
+{Number(page) > 1 && (
 
 <Link
 
@@ -785,17 +1193,14 @@ text-white
 
 </Link>
 
-)
-
-}
+)}
 
 
 
 
 
-{
 
-products.length === 12 && (
+{products.length === 12 && (
 
 <Link
 
@@ -816,9 +1221,7 @@ Next →
 
 </Link>
 
-)
-
-}
+)}
 
 
 
@@ -828,7 +1231,9 @@ Next →
 
 
 
+
 </section>
+
 
 
 
