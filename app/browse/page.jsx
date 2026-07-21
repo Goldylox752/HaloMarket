@@ -10,11 +10,18 @@ async function getProducts(
   location,
   minPrice,
   maxPrice,
-  sort
+  sort,
+  page
 ){
 
-
 const supabase = await createClient();
+
+
+const limit = 12;
+
+const start = (Number(page) - 1) * limit;
+
+const end = start + limit - 1;
 
 
 
@@ -58,7 +65,6 @@ category
 
 
 
-
 if(location){
 
 query = query.ilike(
@@ -67,7 +73,6 @@ query = query.ilike(
 );
 
 }
-
 
 
 
@@ -95,9 +100,7 @@ Number(maxPrice)
 
 
 
-
 if(sort === "low"){
-
 
 query = query.order(
 "price",
@@ -109,7 +112,6 @@ ascending:true
 
 }else if(sort === "high"){
 
-
 query = query.order(
 "price",
 {
@@ -118,9 +120,7 @@ ascending:false
 );
 
 
-
 }else{
-
 
 query = query.order(
 "created_at",
@@ -129,11 +129,7 @@ ascending:false
 }
 );
 
-
 }
-
-
-
 
 
 
@@ -141,8 +137,7 @@ ascending:false
 const {
 data:products,
 error
-}= await query;
-
+}= await query.range(start,end);
 
 
 
@@ -196,6 +191,8 @@ const maxPrice = searchParams?.maxPrice || "";
 
 const sort = searchParams?.sort || "new";
 
+const page = searchParams?.page || 1;
+
 
 
 
@@ -205,8 +202,23 @@ category,
 location,
 minPrice,
 maxPrice,
-sort
+sort,
+page
 );
+
+
+
+
+
+
+
+const createUrl = (newPage)=>{
+
+return `/browse?search=${search}&category=${category}&location=${location}&minPrice=${minPrice}&maxPrice=${maxPrice}&sort=${sort}&page=${newPage}`;
+
+};
+
+
 
 
 
@@ -215,6 +227,9 @@ sort
 return (
 
 <main className="min-h-screen bg-gray-50">
+
+
+
 
 
 
@@ -232,11 +247,11 @@ mx-auto
 flex
 justify-between
 items-center
+gap-8
 ">
 
 
 <div>
-
 
 <h1 className="
 text-5xl
@@ -293,6 +308,7 @@ Sell Something
 
 
 
+
 <section className="
 max-w-6xl
 mx-auto
@@ -314,6 +330,7 @@ p-6
 shadow
 md:grid-cols-6
 "
+
 
 >
 
@@ -423,7 +440,6 @@ British Columbia
 
 
 
-
 <input
 
 name="minPrice"
@@ -469,7 +485,6 @@ py-3
 
 
 
-
 <select
 
 name="sort"
@@ -502,17 +517,14 @@ Highest Price
 
 
 
-
-
-
 <button
 
 className="
 rounded-xl
 bg-black
-text-white
-font-bold
 px-5
+font-bold
+text-white
 "
 
 >
@@ -534,6 +546,7 @@ Filter
 
 
 
+
 <section className="
 max-w-6xl
 mx-auto
@@ -542,18 +555,55 @@ pb-20
 ">
 
 
-<h2 className="
+<div className="
+flex
+justify-between
+items-center
 mb-8
+">
+
+
+<h2 className="
 text-3xl
 font-bold
 ">
 
-Listings ({products.length})
+Listings
 
 </h2>
 
 
+</div>
 
+
+
+
+
+{
+products.length === 0 ? (
+
+
+<div className="
+rounded-2xl
+bg-white
+p-12
+text-center
+">
+
+<h2 className="
+text-2xl
+font-bold
+">
+
+No listings found
+
+</h2>
+
+
+</div>
+
+
+):(
 
 
 <div className="
@@ -581,12 +631,11 @@ overflow-hidden
 rounded-2xl
 bg-white
 shadow-sm
-hover:shadow-xl
 transition
+hover:shadow-xl
 "
 
 >
-
 
 
 <div className="
@@ -634,6 +683,7 @@ No Image
 }
 
 
+
 </div>
 
 
@@ -644,9 +694,9 @@ No Image
 
 
 <h3 className="
+truncate
 font-bold
 text-lg
-truncate
 ">
 
 {product.title}
@@ -682,7 +732,6 @@ text-gray-500
 </div>
 
 
-
 </Link>
 
 
@@ -695,8 +744,93 @@ text-gray-500
 </div>
 
 
+)
+
+}
+
+
+
+
+
+
+
+<div className="
+flex
+justify-center
+gap-4
+mt-12
+">
+
+
+{
+
+Number(page) > 1 && (
+
+<Link
+
+href={createUrl(Number(page)-1)}
+
+className="
+rounded-xl
+bg-black
+px-6
+py-3
+font-bold
+text-white
+"
+
+>
+
+← Previous
+
+</Link>
+
+)
+
+}
+
+
+
+
+
+{
+
+products.length === 12 && (
+
+<Link
+
+href={createUrl(Number(page)+1)}
+
+className="
+rounded-xl
+bg-black
+px-6
+py-3
+font-bold
+text-white
+"
+
+>
+
+Next →
+
+</Link>
+
+)
+
+}
+
+
+
+</div>
+
+
+
+
 
 </section>
+
+
 
 
 
