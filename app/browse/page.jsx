@@ -4,94 +4,161 @@ import { createClient } from "@/lib/supabase/server";
 
 
 
-async function getProducts(search, category, location){
+async function getProducts(
+  search,
+  category,
+  location,
+  minPrice,
+  maxPrice,
+  sort
+){
 
-  const supabase = await createClient();
 
-
-
-  let query = supabase
-
-    .from("products")
-
-    .select(`
-      id,
-      title,
-      price,
-      image,
-      location,
-      slug,
-      category
-    `)
-
-    .order("created_at", {
-      ascending:false
-    });
+const supabase = await createClient();
 
 
 
+let query = supabase
 
+.from("products")
 
-  if(search){
-
-    query = query.ilike(
-      "title",
-      `%${search}%`
-    );
-
-  }
+.select(`
+id,
+title,
+price,
+image,
+location,
+slug,
+category
+`);
 
 
 
 
 
-  if(category){
+if(search){
 
-    query = query.eq(
-      "category",
-      category
-    );
-
-  }
-
-
-
-
-
-  if(location){
-
-    query = query.ilike(
-      "location",
-      `%${location}%`
-    );
-
-  }
-
-
-
-
-
-  const {
-    data:products,
-    error
-  } = await query;
-
-
-
-  if(error){
-
-    console.log(error);
-
-    return [];
-
-  }
-
-
-
-  return products || [];
+query = query.ilike(
+"title",
+`%${search}%`
+);
 
 }
 
+
+
+if(category){
+
+query = query.eq(
+"category",
+category
+);
+
+}
+
+
+
+
+if(location){
+
+query = query.ilike(
+"location",
+`%${location}%`
+);
+
+}
+
+
+
+
+if(minPrice){
+
+query = query.gte(
+"price",
+Number(minPrice)
+);
+
+}
+
+
+
+if(maxPrice){
+
+query = query.lte(
+"price",
+Number(maxPrice)
+);
+
+}
+
+
+
+
+
+
+if(sort === "low"){
+
+
+query = query.order(
+"price",
+{
+ascending:true
+}
+);
+
+
+}else if(sort === "high"){
+
+
+query = query.order(
+"price",
+{
+ascending:false
+}
+);
+
+
+
+}else{
+
+
+query = query.order(
+"created_at",
+{
+ascending:false
+}
+);
+
+
+}
+
+
+
+
+
+
+
+const {
+data:products,
+error
+}= await query;
+
+
+
+
+if(error){
+
+console.log(error);
+
+return [];
+
+}
+
+
+
+return products || [];
+
+}
 
 
 
@@ -103,7 +170,7 @@ export const metadata = {
 title:"Browse Listings | Halo Marketplace",
 
 description:
-"Find products and deals from local sellers on Halo Marketplace."
+"Find products and deals from local sellers."
 
 };
 
@@ -112,9 +179,9 @@ description:
 
 
 
-
-
-export default async function BrowsePage({searchParams}){
+export default async function BrowsePage({
+searchParams
+}){
 
 
 const search = searchParams?.search || "";
@@ -123,12 +190,22 @@ const category = searchParams?.category || "";
 
 const location = searchParams?.location || "";
 
+const minPrice = searchParams?.minPrice || "";
+
+const maxPrice = searchParams?.maxPrice || "";
+
+const sort = searchParams?.sort || "new";
+
+
 
 
 const products = await getProducts(
 search,
 category,
-location
+location,
+minPrice,
+maxPrice,
+sort
 );
 
 
@@ -138,13 +215,6 @@ location
 return (
 
 <main className="min-h-screen bg-gray-50">
-
-
-
-
-
-
-{/* HERO */}
 
 
 
@@ -160,10 +230,8 @@ px-6
 max-w-6xl
 mx-auto
 flex
-flex-col
-md:flex-row
 justify-between
-gap-8
+items-center
 ">
 
 
@@ -180,21 +248,17 @@ Browse Halo Marketplace
 </h1>
 
 
-
 <p className="
 mt-4
-text-lg
 text-gray-300
 ">
 
-Discover products from sellers near you.
+Find deals from sellers near you.
 
 </p>
 
 
-
 </div>
-
 
 
 
@@ -203,12 +267,11 @@ Discover products from sellers near you.
 href="/sell"
 
 className="
-h-fit
 rounded-xl
 bg-white
 px-6
 py-3
-font-semibold
+font-bold
 text-black
 "
 
@@ -227,11 +290,6 @@ Sell Something
 
 
 
-
-
-
-
-{/* FILTERS */}
 
 
 
@@ -254,7 +312,7 @@ rounded-2xl
 bg-white
 p-6
 shadow
-md:grid-cols-4
+md:grid-cols-6
 "
 
 >
@@ -266,12 +324,12 @@ name="search"
 
 defaultValue={search}
 
-placeholder="Search listings..."
+placeholder="Search..."
 
 className="
 rounded-xl
 border
-px-5
+px-4
 py-3
 "
 
@@ -290,40 +348,38 @@ defaultValue={category}
 className="
 rounded-xl
 border
-px-5
+px-4
 py-3
 "
 
 >
 
 <option value="">
-All Categories
+Category
 </option>
 
-<option value="Electronics">
+<option>
 Electronics
 </option>
 
-<option value="Vehicles">
+<option>
 Vehicles
 </option>
 
-<option value="Home">
+<option>
 Home
 </option>
 
-<option value="Gaming">
+<option>
 Gaming
 </option>
 
-<option value="Other">
+<option>
 Other
 </option>
 
 
 </select>
-
-
 
 
 
@@ -338,25 +394,25 @@ defaultValue={location}
 className="
 rounded-xl
 border
-px-5
+px-4
 py-3
 "
 
 >
 
 <option value="">
-All Locations
+Location
 </option>
 
-<option value="Alberta">
+<option>
 Alberta
 </option>
 
-<option value="Ontario">
+<option>
 Ontario
 </option>
 
-<option value="British Columbia">
+<option>
 British Columbia
 </option>
 
@@ -367,22 +423,101 @@ British Columbia
 
 
 
-<button
 
-type="submit"
+<input
+
+name="minPrice"
+
+defaultValue={minPrice}
+
+placeholder="Min $"
+
+type="number"
 
 className="
 rounded-xl
-bg-black
-px-6
+border
+px-4
 py-3
-font-semibold
-text-white
+"
+
+/>
+
+
+
+
+<input
+
+name="maxPrice"
+
+defaultValue={maxPrice}
+
+placeholder="Max $"
+
+type="number"
+
+className="
+rounded-xl
+border
+px-4
+py-3
+"
+
+/>
+
+
+
+
+
+
+<select
+
+name="sort"
+
+defaultValue={sort}
+
+className="
+rounded-xl
+border
+px-4
+py-3
 "
 
 >
 
-Search
+<option value="new">
+Newest
+</option>
+
+<option value="low">
+Lowest Price
+</option>
+
+<option value="high">
+Highest Price
+</option>
+
+
+</select>
+
+
+
+
+
+
+<button
+
+className="
+rounded-xl
+bg-black
+text-white
+font-bold
+px-5
+"
+
+>
+
+Filter
 
 </button>
 
@@ -399,11 +534,6 @@ Search
 
 
 
-
-{/* RESULTS */}
-
-
-
 <section className="
 max-w-6xl
 mx-auto
@@ -412,15 +542,8 @@ pb-20
 ">
 
 
-<div className="
-mb-8
-flex
-justify-between
-items-center
-">
-
-
 <h2 className="
+mb-8
 text-3xl
 font-bold
 ">
@@ -430,17 +553,6 @@ Listings ({products.length})
 </h2>
 
 
-
-</div>
-
-
-
-
-
-
-
-{
-products.length > 0 ? (
 
 
 
@@ -455,8 +567,7 @@ gap-6
 
 {
 
-products.map(product => (
-
+products.map(product=>(
 
 
 <Link
@@ -470,8 +581,8 @@ overflow-hidden
 rounded-2xl
 bg-white
 shadow-sm
-transition
 hover:shadow-xl
+transition
 "
 
 >
@@ -489,7 +600,6 @@ bg-gray-100
 
 product.image ? (
 
-
 <Image
 
 src={product.image}
@@ -498,11 +608,7 @@ alt={product.title}
 
 fill
 
-sizes="(max-width:768px)100vw,25vw"
-
-className="
-object-cover
-"
+className="object-cover"
 
 />
 
@@ -528,11 +634,7 @@ No Image
 }
 
 
-
 </div>
-
-
-
 
 
 
@@ -542,15 +644,14 @@ No Image
 
 
 <h3 className="
-truncate
-text-lg
 font-bold
+text-lg
+truncate
 ">
 
 {product.title}
 
 </h3>
-
 
 
 
@@ -566,45 +667,15 @@ ${Number(product.price).toLocaleString("en-CA")}
 
 
 
-
 <p className="
 mt-2
 text-sm
 text-gray-500
 ">
 
-📍 {product.location || "Canada"}
+📍 {product.location}
 
 </p>
-
-
-
-
-
-{
-product.category && (
-
-
-<span className="
-mt-4
-inline-block
-rounded-full
-bg-gray-100
-px-3
-py-1
-text-sm
-"
-
->
-
-{product.category}
-
-</span>
-
-
-)
-
-}
 
 
 
@@ -617,86 +688,15 @@ text-sm
 
 ))
 
-
 }
 
 
 
 </div>
-
-
-
-
-):(
-
-
-
-<div className="
-rounded-2xl
-bg-white
-p-12
-text-center
-">
-
-
-<h2 className="
-text-2xl
-font-bold
-">
-
-No listings found
-
-</h2>
-
-
-<p className="
-mt-3
-text-gray-500
-">
-
-Try changing your filters.
-
-</p>
-
-
-
-<Link
-
-href="/sell"
-
-className="
-mt-6
-inline-block
-rounded-xl
-bg-black
-px-6
-py-3
-font-bold
-text-white
-"
-
->
-
-Create Listing
-
-</Link>
-
-
-
-</div>
-
-
-
-)
-
-}
 
 
 
 </section>
-
-
-
 
 
 
