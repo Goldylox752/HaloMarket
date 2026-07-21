@@ -1,121 +1,191 @@
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import SubmitButton from "@/components/SubmitButton";
+import { notFound } from "next/navigation";
 
-async function getProduct(slug) {
+async function getProduct(slug: string, userId: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("products")
-    .select(`
-      *,
-      profiles (  -- assuming you have a profiles table with user info
-        id,
-        full_name,
-        avatar_url,
-        location
-      )
-    `)
+    .select("*")
     .eq("slug", slug)
     .single();
 
-  if (error || !data) {
-    console.error("Error fetching product:", error);
-    return null;
-  }
-
-  // Build full image URL (same as before)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const bucket = "product-images";
-  data.image = data.image
-    ? `${supabaseUrl}/storage/v1/object/public/${bucket}/${data.image}`
-    : null;
-
+  if (error || !data) return null;
+  // Ensure the user owns this product
+  if (data.user_id !== userId) return null;
   return data;
 }
 
-function formatPrice(price) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(price || 0);
-}
+export default async function EditProductPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams?: { error?: string };
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default async function ProductPage({ params }) {
-  const { slug } = await params;
-  const product = await getProduct(slug);
+  if (!user) redirect("/login");
 
-  if (!product) {
-    notFound();
+  const product = await getProduct(params.slug, user.id);
+  if (!product) notFound();
+
+  async function updateProduct(formData: FormData) {
+    "use server";
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) redirect("/login");
+
+    const title = formData.get("title")?.toString().trim();
+    const description = formData.get("description")?.toString().trim();
+    const price = Number(formData.get("price"));
+    const location = formData.get("location")?.toString().trim();
+    const category = formData.get("category")?.toString();
+    const condition = formData.get("condition")?.toString();
+    const slug = formData.get("slug")?.toString();
+
+    if (!title || !price || !category) {
+      redirect(`/product/edit/${slug}?error=Required fields missing.`);
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update({
+        title,
+        description,
+        price,
+        location,
+        category,
+        condition,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("slug", slug)
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error(error);
+      redirect(`/product/edit/${slug}?error=Update failed.`);
+    }
+
+    redirect(`/product/${slug}`);
   }
 
+  const error = searchParams?.error;
+
   return (
-    <main className="min-h-screen bg-white px-4 py-10">
-      <div className="max-w-5xl mx-auto">
-        <Link href="/" className="inline-block mb-6 text-indigo-600 font-bold">
-          ← Back to listings
-        </Link>
+    <main className="min-h-screen bg-gray-50 px-6 py-16">
+      <div className="mx-auto max-w-3xl">
+        <div className="rounded-3xl bg-white p-10 shadow">
+          <h1 className="text-3xl font-black">Edit Listing</h1>
+          <p className="mt-2 text-gray-600">Update your product details.</p>
 
-        <div className="grid md:grid-cols-2 gap-10">
-          {/* Image */}
-          <div className="relative h-80 md:h-96 bg-gray-100 rounded-3xl overflow-hidden">
-            {product.image ? (
-              <Image
-                src={product.image}
-                alt={product.title}
-                fill
-                className="object-cover"
+          {error && (
+            <div className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-200">
+              {error}
+            </div>
+          )}
+
+          <form action={updateProduct} className="mt-8 space-y-5">
+            <input type="hidden" name="slug" value={product.slug} />
+
+            <div>
+              <label className="text-sm font-medium">Title *</label>
+              <input
+                name="title"
+                type="text"
+                required
+                defaultValue={product.title}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
               />
-            ) : (
-              <div className="flex h-full items-center justify-center text-6xl">
-                📦
-              </div>
-            )}
-          </div>
-
-          {/* Details */}
-          <div>
-            <h1 className="text-3xl font-black">{product.title}</h1>
-            <p className="mt-2 text-2xl font-bold text-indigo-600">
-              {formatPrice(product.price)}
-            </p>
-            <p className="mt-2 text-gray-500">
-              📍 {product.location || "Canada"} · {product.category}
-            </p>
-
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gray-300" />
-              <div>
-                <p className="font-semibold">
-                  {product.profiles?.full_name || "Anonymous Seller"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Member since ... {/* you could add a joined_at field */}
-                </p>
-              </div>
             </div>
 
-            <div className="mt-6 border-t pt-6">
-              <h2 className="font-bold text-lg">Description</h2>
-              <p className="mt-2 text-gray-700 whitespace-pre-wrap">
-                {product.description || "No description provided."}
-              </p>
+            <div>
+              <label className="text-sm font-medium">Price (CAD) *</label>
+              <input
+                name="price"
+                type="number"
+                step="0.01"
+                required
+                defaultValue={product.price}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
             </div>
 
-            <div className="mt-8 flex gap-4">
-              <button className="rounded-xl bg-black px-8 py-4 font-bold text-white hover:bg-gray-800 transition">
-                💬 Message Seller
-              </button>
-              <button className="rounded-xl border border-gray-300 px-8 py-4 font-bold hover:bg-gray-100 transition">
-                ❤️ Save
-              </button>
+            <div>
+              <label className="text-sm font-medium">Location</label>
+              <input
+                name="location"
+                type="text"
+                defaultValue={product.location || ""}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
             </div>
 
-            <p className="mt-4 text-sm text-gray-400">
-              Listed on {new Date(product.created_at).toLocaleDateString("en-CA")}
-            </p>
-          </div>
+            <div>
+              <label className="text-sm font-medium">Category *</label>
+              <select
+                name="category"
+                required
+                defaultValue={product.category}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                <option value="">Select</option>
+                <option>Vehicles</option>
+                <option>Electronics</option>
+                <option>Computers</option>
+                <option>Home</option>
+                <option>Fashion</option>
+                <option>Gaming</option>
+                <option>Tools</option>
+                <option>Sports</option>
+                <option>Services</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Condition</label>
+              <select
+                name="condition"
+                defaultValue={product.condition || ""}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                <option value="">Select</option>
+                <option>New</option>
+                <option>Like New</option>
+                <option>Used</option>
+                <option>Refurbished</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <textarea
+                name="description"
+                rows="5"
+                defaultValue={product.description || ""}
+                className="mt-1 w-full rounded-xl border p-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <SubmitButton>Save Changes</SubmitButton>
+              <Link
+                href={`/product/${product.slug}`}
+                className="inline-flex items-center justify-center w-full rounded-xl border border-gray-300 px-6 py-4 font-bold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
     </main>
