@@ -3,13 +3,17 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 
-async function getProducts(){
+
+async function getProducts(search, category, location){
 
   const supabase = await createClient();
 
 
-  const {data: products, error} = await supabase
+
+  let query = supabase
+
     .from("products")
+
     .select(`
       id,
       title,
@@ -19,9 +23,59 @@ async function getProducts(){
       slug,
       category
     `)
+
     .order("created_at", {
       ascending:false
     });
+
+
+
+
+
+  if(search){
+
+    query = query.ilike(
+      "title",
+      `%${search}%`
+    );
+
+  }
+
+
+
+
+
+  if(category){
+
+    query = query.eq(
+      "category",
+      category
+    );
+
+  }
+
+
+
+
+
+  if(location){
+
+    query = query.ilike(
+      "location",
+      `%${location}%`
+    );
+
+  }
+
+
+
+
+
+  const {
+    data:products,
+    error
+  } = await query;
+
 
 
   if(error){
@@ -33,9 +87,12 @@ async function getProducts(){
   }
 
 
+
   return products || [];
 
 }
+
+
 
 
 
@@ -54,10 +111,27 @@ description:
 
 
 
-export default async function BrowsePage(){
 
 
-const products = await getProducts();
+
+export default async function BrowsePage({searchParams}){
+
+
+const search = searchParams?.search || "";
+
+const category = searchParams?.category || "";
+
+const location = searchParams?.location || "";
+
+
+
+const products = await getProducts(
+search,
+category,
+location
+);
+
+
 
 
 
@@ -67,29 +141,60 @@ return (
 
 
 
+
+
+
 {/* HERO */}
 
-<section className="bg-black text-white py-16 px-6">
 
 
-<div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-8">
+<section className="
+bg-black
+text-white
+py-16
+px-6
+">
+
+
+<div className="
+max-w-6xl
+mx-auto
+flex
+flex-col
+md:flex-row
+justify-between
+gap-8
+">
 
 
 <div>
 
-<h1 className="text-5xl font-bold">
+
+<h1 className="
+text-5xl
+font-bold
+">
+
 Browse Halo Marketplace
+
 </h1>
 
 
-<p className="mt-4 text-gray-300 text-lg">
 
-Discover great deals from sellers near you.
+<p className="
+mt-4
+text-lg
+text-gray-300
+">
+
+Discover products from sellers near you.
 
 </p>
 
 
+
 </div>
+
 
 
 
@@ -98,13 +203,13 @@ Discover great deals from sellers near you.
 href="/sell"
 
 className="
+h-fit
+rounded-xl
 bg-white
-text-black
 px-6
 py-3
-rounded-xl
 font-semibold
-h-fit
+text-black
 "
 
 >
@@ -125,29 +230,47 @@ Sell Something
 
 
 
-{/* SEARCH */}
 
-<section className="max-w-6xl mx-auto px-6 py-10">
+{/* FILTERS */}
 
 
-<div className="
-bg-white
-rounded-2xl
-shadow
-p-6
-grid
-md:grid-cols-3
-gap-4
+
+<section className="
+max-w-6xl
+mx-auto
+px-6
+py-10
 ">
+
+
+<form
+
+action="/browse"
+
+className="
+grid
+gap-4
+rounded-2xl
+bg-white
+p-6
+shadow
+md:grid-cols-4
+"
+
+>
 
 
 <input
 
-placeholder="Search products..."
+name="search"
+
+defaultValue={search}
+
+placeholder="Search listings..."
 
 className="
-border
 rounded-xl
+border
 px-5
 py-3
 "
@@ -156,35 +279,44 @@ py-3
 
 
 
-<select className="
-border
+
+
+<select
+
+name="category"
+
+defaultValue={category}
+
+className="
 rounded-xl
+border
 px-5
 py-3
-">
+"
 
+>
 
-<option>
+<option value="">
 All Categories
 </option>
 
-<option>
+<option value="Electronics">
 Electronics
 </option>
 
-<option>
+<option value="Vehicles">
 Vehicles
 </option>
 
-<option>
+<option value="Home">
 Home
 </option>
 
-<option>
+<option value="Gaming">
 Gaming
 </option>
 
-<option>
+<option value="Other">
 Other
 </option>
 
@@ -194,27 +326,37 @@ Other
 
 
 
-<select className="
-border
+
+
+
+<select
+
+name="location"
+
+defaultValue={location}
+
+className="
 rounded-xl
+border
 px-5
 py-3
-">
+"
 
+>
 
-<option>
+<option value="">
 All Locations
 </option>
 
-<option>
+<option value="Alberta">
 Alberta
 </option>
 
-<option>
+<option value="Ontario">
 Ontario
 </option>
 
-<option>
+<option value="British Columbia">
 British Columbia
 </option>
 
@@ -223,7 +365,30 @@ British Columbia
 
 
 
-</div>
+
+
+<button
+
+type="submit"
+
+className="
+rounded-xl
+bg-black
+px-6
+py-3
+font-semibold
+text-white
+"
+
+>
+
+Search
+
+</button>
+
+
+
+</form>
 
 
 </section>
@@ -234,7 +399,10 @@ British Columbia
 
 
 
+
 {/* RESULTS */}
+
+
 
 <section className="
 max-w-6xl
@@ -245,18 +413,22 @@ pb-20
 
 
 <div className="
+mb-8
 flex
 justify-between
 items-center
-mb-8
 ">
 
 
-<h2 className="text-3xl font-bold">
+<h2 className="
+text-3xl
+font-bold
+">
 
-Latest Listings ({products.length})
+Listings ({products.length})
 
 </h2>
+
 
 
 </div>
@@ -265,8 +437,11 @@ Latest Listings ({products.length})
 
 
 
+
+
 {
 products.length > 0 ? (
+
 
 
 <div className="
@@ -279,7 +454,9 @@ gap-6
 
 
 {
-products.map((product)=>(
+
+products.map(product => (
+
 
 
 <Link
@@ -289,16 +466,16 @@ key={product.id}
 href={`/product/${product.slug}`}
 
 className="
-bg-white
-rounded-2xl
 overflow-hidden
+rounded-2xl
+bg-white
 shadow-sm
-hover:shadow-xl
 transition
+hover:shadow-xl
 "
 
-
 >
+
 
 
 <div className="
@@ -309,7 +486,9 @@ bg-gray-100
 
 
 {
+
 product.image ? (
+
 
 <Image
 
@@ -321,7 +500,9 @@ fill
 
 sizes="(max-width:768px)100vw,25vw"
 
-className="object-cover"
+className="
+object-cover
+"
 
 />
 
@@ -331,9 +512,9 @@ className="object-cover"
 
 <div className="
 flex
+h-full
 items-center
 justify-center
-h-full
 text-gray-400
 ">
 
@@ -347,7 +528,10 @@ No Image
 }
 
 
+
 </div>
+
+
 
 
 
@@ -358,9 +542,9 @@ No Image
 
 
 <h3 className="
-font-bold
-text-lg
 truncate
+text-lg
+font-bold
 ">
 
 {product.title}
@@ -369,57 +553,54 @@ truncate
 
 
 
-<div className="
-flex
-justify-between
+
+<p className="
 mt-3
-">
-
-
-<p className="
-font-bold
 text-xl
+font-black
 ">
 
-${Number(product.price).toLocaleString()}
+${Number(product.price).toLocaleString("en-CA")}
 
 </p>
-
-
-
-</div>
 
 
 
 
 <p className="
-text-gray-500
-text-sm
 mt-2
+text-sm
+text-gray-500
 ">
 
-📍 {product.location}
+📍 {product.location || "Canada"}
 
 </p>
+
+
 
 
 
 {
 product.category && (
 
+
 <span className="
-inline-block
 mt-4
-bg-gray-100
+inline-block
 rounded-full
+bg-gray-100
 px-3
 py-1
 text-sm
-">
+"
+
+>
 
 {product.category}
 
 </span>
+
 
 )
 
@@ -430,38 +611,50 @@ text-sm
 </div>
 
 
+
 </Link>
 
 
 ))
 
+
 }
+
 
 
 </div>
 
 
+
+
 ):(
 
 
+
 <div className="
-bg-white
 rounded-2xl
+bg-white
 p-12
 text-center
 ">
 
 
-<h2 className="text-2xl font-bold">
+<h2 className="
+text-2xl
+font-bold
+">
 
-No listings yet
+No listings found
 
 </h2>
 
 
-<p className="text-gray-500 mt-3">
+<p className="
+mt-3
+text-gray-500
+">
 
-Be the first person to sell something on Halo Marketplace.
+Try changing your filters.
 
 </p>
 
@@ -472,13 +665,14 @@ Be the first person to sell something on Halo Marketplace.
 href="/sell"
 
 className="
-inline-block
 mt-6
+inline-block
+rounded-xl
 bg-black
-text-white
 px-6
 py-3
-rounded-xl
+font-bold
+text-white
 "
 
 >
@@ -492,12 +686,17 @@ Create Listing
 </div>
 
 
+
 )
 
 }
 
 
+
 </section>
+
+
+
 
 
 
