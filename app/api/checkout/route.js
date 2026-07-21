@@ -1,20 +1,30 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+
 import { createClient } from "@/lib/supabase/server";
 
 
+
 const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY
+process.env.STRIPE_SECRET_KEY
 );
 
 
 
-export async function POST(request) {
-
-try {
 
 
-const { productId } = await request.json();
+export async function POST(request){
+
+
+try{
+
+
+const {
+productId
+
+}= await request.json();
+
+
 
 
 
@@ -33,29 +43,84 @@ status:400
 
 
 
+
+
+
+
 const supabase = await createClient();
 
 
 
 
-// Get product
 
-const { data: product, error } = await supabase
+const {
+
+data:{
+user
+
+}
+
+}= await supabase.auth.getUser();
+
+
+
+
+
+if(!user){
+
+return NextResponse.json(
+{
+error:"Login required"
+},
+{
+status:401
+}
+);
+
+}
+
+
+
+
+
+
+
+const {
+
+data:product,
+
+error
+
+}= await supabase
 
 .from("products")
 
 .select(`
+
 id,
+
 title,
+
 price,
+
 image,
+
 seller_id,
+
 description
+
 `)
 
-.eq("id", productId)
+.eq(
+"id",
+productId
+)
 
 .single();
+
+
+
+
 
 
 
@@ -63,24 +128,40 @@ if(error || !product){
 
 
 return NextResponse.json(
-
 {
 error:"Product not found"
 },
-
 {
 status:404
 }
-
 );
-
 
 }
 
 
 
 
-// Create Stripe Checkout
+
+
+
+if(product.seller_id === user.id){
+
+
+return NextResponse.json(
+{
+error:"You cannot buy your own product"
+},
+{
+status:400
+}
+);
+
+}
+
+
+
+
+
 
 
 const session = await stripe.checkout.sessions.create({
@@ -95,7 +176,11 @@ payment_method_types:[
 
 
 
+
+
 mode:"payment",
+
+
 
 
 
@@ -105,24 +190,22 @@ line_items:[
 
 price_data:{
 
-
 currency:"cad",
 
 
 
 product_data:{
 
-
 name:product.title,
 
 
 description:
-product.description || "Halo Market Product",
+product.description ||
+"Halo Marketplace item",
 
 
 
 images:
-
 product.image
 ?
 [product.image]
@@ -134,11 +217,9 @@ product.image
 
 
 unit_amount:
-
 Math.round(
 Number(product.price) * 100
-),
-
+)
 
 },
 
@@ -146,10 +227,10 @@ Number(product.price) * 100
 
 quantity:1
 
-
 }
 
 ],
+
 
 
 
@@ -161,6 +242,9 @@ metadata:{
 productId:product.id,
 
 
+buyerId:user.id,
+
+
 sellerId:product.seller_id
 
 
@@ -169,9 +253,11 @@ sellerId:product.seller_id
 
 
 
+
 success_url:
 
 `${process.env.NEXT_PUBLIC_SITE_URL}/orders/success?session_id={CHECKOUT_SESSION_ID}`,
+
 
 
 
@@ -188,6 +274,8 @@ cancel_url:
 
 
 
+
+
 return NextResponse.json({
 
 url:session.url
@@ -198,11 +286,12 @@ url:session.url
 
 
 
+
 }catch(error){
 
 
 console.error(
-"Checkout Error:",
+"Stripe Checkout Error:",
 error
 );
 
