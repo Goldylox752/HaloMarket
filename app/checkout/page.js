@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+
+import { createClient } from "@/lib/supabase/server";
 
 
 
@@ -12,30 +13,27 @@ const supabase = await createClient();
 
 
 const {
-
 data,
-
 error
 
-}=await supabase
+}= await supabase
 
 .from("products")
 
 .select(`
-
 *,
-
 profiles:seller_id(
-
 username
-
 )
-
 `)
 
-.eq("id",id)
+.eq(
+"id",
+id
+)
 
 .single();
+
 
 
 
@@ -47,9 +45,7 @@ return null;
 }
 
 
-
 return data;
-
 
 }
 
@@ -60,23 +56,31 @@ return data;
 
 function formatPrice(price){
 
-
 return new Intl.NumberFormat(
-
 "en-CA",
-
 {
-
 style:"currency",
-
 currency:"CAD"
-
 }
-
 ).format(price || 0);
 
-
 }
+
+
+
+
+
+
+
+export const metadata = {
+
+title:"Checkout | Halo Marketplace",
+
+description:
+"Complete your Halo Marketplace purchase."
+
+};
+
 
 
 
@@ -85,19 +89,14 @@ currency:"CAD"
 
 
 export default async function CheckoutPage({
-
 searchParams
-
 }){
 
 
 const params = await searchParams;
 
 
-
 const productId = params?.product;
-
-
 
 
 
@@ -110,8 +109,8 @@ redirect("/products");
 
 
 
-const product = await getProduct(productId);
 
+const product = await getProduct(productId);
 
 
 
@@ -125,18 +124,17 @@ notFound();
 
 
 
+
 const supabase = await createClient();
 
 
 
 const {
-
 data:{
 user
-
 }
 
-}=await supabase.auth.getUser();
+}= await supabase.auth.getUser();
 
 
 
@@ -152,8 +150,22 @@ redirect("/login");
 
 
 
-async function createOrder(){
 
+if(product.seller_id === user.id){
+
+redirect(
+`/product/${product.slug}`
+);
+
+}
+
+
+
+
+
+
+
+async function createOrder(){
 
 "use server";
 
@@ -165,13 +177,11 @@ const supabase = await createClient();
 
 
 const {
-
 data:{
 user
-
 }
 
-}=await supabase.auth.getUser();
+}= await supabase.auth.getUser();
 
 
 
@@ -187,9 +197,11 @@ redirect("/login");
 
 
 
+const {
 
+error
 
-await supabase
+}= await supabase
 
 .from("orders")
 
@@ -211,6 +223,21 @@ status:"pending"
 
 
 
+if(error){
+
+console.log(
+"Order error:",
+error
+);
+
+return;
+
+}
+
+
+
+
+
 redirect("/dashboard");
 
 }
@@ -221,22 +248,36 @@ redirect("/dashboard");
 
 return (
 
-
-<main className="min-h-screen bg-gray-50 py-16 px-6">
-
-
-
-<div className="max-w-3xl mx-auto">
-
-
-
-<div className="bg-white rounded-3xl shadow p-10">
+<main className="
+min-h-screen
+bg-gray-50
+px-6
+py-16
+">
 
 
+<div className="
+mx-auto
+max-w-3xl
+">
 
 
 
-<h1 className="text-4xl font-bold">
+<div className="
+rounded-3xl
+bg-white
+p-10
+shadow
+">
+
+
+
+
+
+<h1 className="
+text-4xl
+font-black
+">
 
 Checkout
 
@@ -244,7 +285,10 @@ Checkout
 
 
 
-<p className="text-gray-500 mt-2">
+<p className="
+mt-3
+text-gray-600
+">
 
 Review your order before purchasing.
 
@@ -256,11 +300,20 @@ Review your order before purchasing.
 
 
 
-<div className="border rounded-2xl p-6 mt-8">
+
+<div className="
+mt-8
+rounded-2xl
+border
+p-6
+">
 
 
 
-<h2 className="text-2xl font-bold">
+<h2 className="
+text-2xl
+font-black
+">
 
 {product.title}
 
@@ -269,7 +322,12 @@ Review your order before purchasing.
 
 
 
-<p className="text-indigo-600 text-3xl font-black mt-3">
+<p className="
+mt-4
+text-3xl
+font-black
+text-indigo-600
+">
 
 {formatPrice(product.price)}
 
@@ -278,23 +336,42 @@ Review your order before purchasing.
 
 
 
-<p className="mt-3 text-gray-500">
+<div className="
+mt-5
+space-y-2
+text-gray-600
+">
 
-Seller:
+
+<p>
+
+👤 Seller:
 
 {" "}
 
-{product.profiles?.username || "Seller"}
+{product.profiles?.username || "Halo Seller"}
 
 </p>
 
 
 
-<p className="text-gray-500">
+<p>
 
-📍 {product.location}
+📍 {product.location || "Canada"}
 
 </p>
+
+
+
+<p>
+
+📦 {product.condition || "Used"}
+
+</p>
+
+
+
+</div>
 
 
 
@@ -311,14 +388,25 @@ Seller:
 
 action={createOrder}
 
-className="mt-8"
+className="
+mt-8
+"
 
 >
 
 
 <button
 
-className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl text-lg font-bold"
+className="
+w-full
+rounded-xl
+bg-indigo-600
+py-4
+text-lg
+font-bold
+text-white
+hover:bg-indigo-700
+"
 
 >
 
@@ -327,7 +415,11 @@ Place Order
 </button>
 
 
+
 </form>
+
+
+
 
 
 
@@ -335,9 +427,14 @@ Place Order
 
 <Link
 
-href={`/products/${product.id}`}
+href={`/product/${product.slug}`}
 
-className="block text-center mt-5 text-gray-500"
+className="
+mt-5
+block
+text-center
+text-gray-500
+"
 
 >
 
@@ -348,18 +445,16 @@ className="block text-center mt-5 text-gray-500"
 
 
 
+
+
 </div>
 
 
-
 </div>
-
 
 
 </main>
 
-
-)
-
+);
 
 }
