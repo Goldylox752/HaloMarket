@@ -1,24 +1,31 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
 import Chat from "@/components/Chat";
 import { getOrCreateConversation } from "@/app/actions/messaging";
 
 
 
+export const metadata = {
 
-// ===============================
-// GET USER CONVERSATIONS
-// ===============================
+title:"Messages | Halo Marketplace",
 
+description:
+"Chat securely with buyers and sellers on Halo Marketplace."
+
+};
+
+
+
+
+// Get user conversations
 
 async function getConversations(userId){
 
 
-const supabase =
-await createClient();
-
+const supabase = await createClient();
 
 
 const {
@@ -77,16 +84,9 @@ ascending:false
 
 
 
-
-
-
-
 if(error){
 
-console.error(
-"Conversation error:",
-error
-);
+console.error(error);
 
 return [];
 
@@ -94,19 +94,15 @@ return [];
 
 
 
+return (data || []).map((conv)=>{
 
 
-
-return data.map(conv=>{
-
-
-const isUser1 =
+const mine =
 conv.user1_id === userId;
 
 
-
 const profile =
-isUser1
+mine
 ?
 conv.user2
 :
@@ -114,22 +110,16 @@ conv.user1;
 
 
 
-const otherUserId =
-isUser1
-?
-conv.user2_id
-:
-conv.user1_id;
-
-
-
-
-
 return {
 
 id:conv.id,
 
-otherUserId,
+otherUserId:
+mine
+?
+conv.user2_id
+:
+conv.user1_id,
 
 
 username:
@@ -145,96 +135,36 @@ profile?.verified || false,
 
 
 lastMessage:
-conv.last_message ||
-"Start conversation",
-
-
-lastMessageAt:
-conv.last_message_at
+conv.last_message || "Start conversation"
 
 };
-
 
 
 });
 
+
 }
 
 
 
 
 
-// ===============================
-// GET CHAT MESSAGES
-// ===============================
 
+// Get messages
 
-async function getMessagesForConversation(
-userId,
-otherUserId
+async function getMessages(
+conversationId
 ){
 
 
-const supabase =
-await createClient();
+if(!conversationId){
 
-
-
-
-const [
-first,
-second
-]=[
-userId,
-otherUserId
-].sort();
-
-
-
-
-
-
-const {
-data:conversation
-}=await supabase
-
-.from("conversations")
-
-.select("id")
-
-.eq(
-"user1_id",
-first
-)
-
-.eq(
-"user2_id",
-second
-)
-
-.maybeSingle();
-
-
-
-
-
-
-
-if(!conversation){
-
-return {
-
-messages:[],
-
-conversationId:null
-
-};
+return [];
 
 }
 
 
-
-
+const supabase = await createClient();
 
 
 
@@ -249,6 +179,8 @@ error
 
 id,
 
+conversation_id,
+
 message,
 
 sender_id,
@@ -261,7 +193,7 @@ created_at
 
 .eq(
 "conversation_id",
-conversation.id
+conversationId
 )
 
 .order(
@@ -273,60 +205,19 @@ ascending:true
 
 
 
-
-
-
 if(error){
 
-console.error(
-"Messages error:",
-error
-);
+console.error(error);
 
-
-return {
-
-messages:[],
-
-conversationId:conversation.id
-
-};
+return [];
 
 }
 
 
 
-
-
-return {
-
-messages:data || [],
-
-conversationId:conversation.id
-
-};
-
+return data || [];
 
 }
-
-
-
-
-
-
-
-export const metadata={
-
-
-title:
-"Messages | Halo Marketplace",
-
-
-description:
-"Chat securely with buyers and sellers on Halo Marketplace."
-
-
-};
 
 
 
@@ -339,8 +230,7 @@ searchParams
 }){
 
 
-const supabase =
-await createClient();
+const supabase = await createClient();
 
 
 
@@ -349,8 +239,6 @@ data:{
 user
 }
 }=await supabase.auth.getUser();
-
-
 
 
 
@@ -363,16 +251,13 @@ redirect("/login");
 
 
 
-
 const params =
 await searchParams;
 
 
 
 const sellerId =
-params?.seller || "";
-
-
+params?.seller;
 
 
 
@@ -383,40 +268,33 @@ user.id
 
 
 
-let initialMessages=[];
-
 let conversationId=null;
 
+let messages=[];
+
 let sellerProfile=null;
-// ===============================
-// LOAD ACTIVE CONVERSATION
-// ===============================
+
+
+
+
 
 
 if(sellerId){
 
 
-const result =
-await getMessagesForConversation(
-user.id,
-sellerId
+
+const existing =
+conversations.find(
+(c)=>c.otherUserId === sellerId
 );
 
 
 
-initialMessages =
-result.messages;
-
 
 conversationId =
-result.conversationId;
+existing?.id;
 
 
-
-
-
-
-// Create conversation if it does not exist
 
 if(!conversationId){
 
@@ -429,6 +307,14 @@ sellerId
 
 }
 
+
+
+
+
+messages =
+await getMessages(
+conversationId
+);
 
 
 
@@ -459,11 +345,8 @@ sellerId
 
 
 
-
-
 sellerProfile =
-profile ||
-{
+profile || {
 
 username:"Halo User",
 
@@ -481,21 +364,13 @@ verified:false
 
 
 
-
-
-
 return (
 
 <main className="
 min-h-screen
 bg-gray-50
-px-4
-py-8
-md:px-6
+p-6
 ">
-
-
-
 
 
 <div className="
@@ -508,9 +383,6 @@ shadow
 ">
 
 
-
-
-
 <div className="
 flex
 h-[80vh]
@@ -520,53 +392,40 @@ md:flex-row
 
 
 
-
-
-
-{/* ===============================
-CONVERSATION SIDEBAR
-=============================== */}
-
-
-
+{/* Sidebar */}
 
 
 <aside className="
 w-full
-border-b
+border-r
 bg-gray-50
 md:w-96
-md:border-b-0
-md:border-r
 overflow-y-auto
 ">
 
 
-
-
-
 <div className="
 border-b
-p-5
+p-6
 ">
 
-<h2 className="
+
+<h1 className="
 text-2xl
 font-black
 ">
 
 Messages
 
-</h2>
+</h1>
 
 
 <p className="
-mt-1
 text-sm
 text-gray-500
 ">
 
-Buyer and seller conversations
+Buyer & seller chat
 
 </p>
 
@@ -576,28 +435,24 @@ Buyer and seller conversations
 
 
 
-
-
-
 {
 
-conversations.length === 0 ? (
-
+conversations.length === 0 ?
 
 
 <div className="
 p-8
 text-center
-text-gray-500
 ">
 
 
-<p>
+<p className="
+text-gray-500
+">
 
-No conversations yet.
+No conversations yet
 
 </p>
-
 
 
 
@@ -606,7 +461,7 @@ No conversations yet.
 href="/browse"
 
 className="
-mt-4
+mt-5
 block
 font-bold
 text-indigo-600
@@ -622,29 +477,17 @@ Browse Listings
 </div>
 
 
+:
+
+<ul className="divide-y">
 
 
-):(
+{
+
+conversations.map((conv)=>(
 
 
-
-
-
-
-<ul className="
-divide-y
-">
-
-
-{conversations.map(conv=>(
-
-
-
-<li
-
-key={conv.id}
-
->
+<li key={conv.id}>
 
 
 <Link
@@ -657,22 +500,10 @@ block
 
 p-5
 
-transition
-
 hover:bg-gray-100
 
-
-${
-
-sellerId === conv.otherUserId
-
-?
-
-"bg-indigo-50"
-
-:
-
-""
+${sellerId === conv.otherUserId ? 
+"bg-indigo-50":""
 
 }
 
@@ -681,16 +512,10 @@ sellerId === conv.otherUserId
 >
 
 
-
-
 <div className="
 flex
-items-center
 gap-4
 ">
-
-
-
 
 
 <Image
@@ -710,29 +535,11 @@ rounded-full
 />
 
 
-
-
-
-
-
-
-<div className="
-min-w-0
-flex-1
-">
-
-
-
-<div className="
-flex
-items-center
-gap-2
-">
+<div>
 
 
 <p className="
-truncate
-font-black
+font-bold
 ">
 
 {conv.username}
@@ -740,33 +547,7 @@ font-black
 </p>
 
 
-
-
-{conv.verified && (
-
-<span className="
-text-xs
-font-bold
-text-green-600
-">
-
-✓
-
-</span>
-
-)}
-
-
-</div>
-
-
-
-
-
-
-
 <p className="
-truncate
 text-sm
 text-gray-500
 ">
@@ -776,17 +557,10 @@ text-gray-500
 </p>
 
 
-
-
 </div>
 
 
-
-
-
 </div>
-
-
 
 
 </Link>
@@ -795,21 +569,16 @@ text-gray-500
 </li>
 
 
-))}
+))
+
+
+}
 
 
 </ul>
 
 
-
-
-
-
-)
-
 }
-
-
 
 
 
@@ -819,124 +588,17 @@ text-gray-500
 
 
 
-{/* ===============================
-CHAT WINDOW
-=============================== */}
+{/* Chat */}
 
 
-
-<div className="
+<section className="
 flex-1
-flex
-flex-col
 ">
 
-
-
-
-
-{sellerId ? (
-
-
-
-
-<>
-
-
-{/* CHAT HEADER */}
-
-
-<div className="
-flex
-items-center
-gap-4
-border-b
-p-5
-">
-
-
-<Image
-
-src={
-sellerProfile?.avatar ||
-"/avatar.png"
-}
-
-alt={
-sellerProfile?.username ||
-"User"
-}
-
-width={48}
-
-height={48}
-
-className="
-rounded-full
-"
-
-/>
-
-
-
-
-
-<div>
-
-
-<h2 className="
-text-xl
-font-black
-">
 
 {
-sellerProfile?.username ||
-"Halo User"
-}
 
-</h2>
-
-
-
-
-
-
-{sellerProfile?.verified && (
-
-<p className="
-text-sm
-font-bold
-text-green-600
-">
-
-✓ Verified Seller
-
-</p>
-
-)}
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-{/* CHAT COMPONENT */}
-
-
-
-<div className="
-flex-1
-overflow-hidden
-">
+sellerId ?
 
 
 <Chat
@@ -945,43 +607,26 @@ user={user}
 
 receiverId={sellerId}
 
-initialMessages={initialMessages}
-
 conversationId={conversationId}
 
-sellerProfile={sellerProfile}
+initialMessages={messages}
 
 />
 
 
-</div>
-
-
-
-</>
-
-
-
-
-
-):(
-
-
-
+:
 
 
 <div className="
 flex
-flex-1
+h-full
 items-center
 justify-center
-p-10
 text-center
 ">
 
 
 <div>
-
 
 <div className="
 text-6xl
@@ -990,7 +635,6 @@ text-6xl
 💬
 
 </div>
-
 
 
 <h2 className="
@@ -1004,72 +648,38 @@ Select a conversation
 </h2>
 
 
-
-
 <p className="
 mt-3
 text-gray-500
 ">
 
-Start chatting with sellers from any Halo listing.
+Choose a seller to start chatting.
 
 </p>
 
 
-
-
-
-<Link
-
-href="/browse"
-
-className="
-mt-6
-inline-block
-rounded-xl
-bg-black
-px-8
-py-3
-font-bold
-text-white
-"
-
->
-
-Browse Marketplace
-
-</Link>
-
-
-
 </div>
 
 
 </div>
 
 
+}
 
 
 
-)}
-
-
-
-</div>
-
+</section>
 
 
 
 
 </div>
-
 
 
 </div>
 
 
 </main>
-
 
 );
 
