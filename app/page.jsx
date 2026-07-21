@@ -1,1346 +1,2338 @@
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { createClient } from "@/lib/supabase/server";
 
-async function getProducts(search, category, location) {
-  const supabase = await createClient();
 
-  let query = supabase
-    .from("products")
-    .select(`
-      id,
-      title,
-      price,
-      image,
-      location,
-      slug,
-      category,
-      created_at
-    `)
-    .order("created_at", { ascending: false })
-    .limit(12);
 
-  if (search) {
-    query = query.ilike("title", `%${search}%`);
-  }
+// ===============================
+// GET PRODUCTS
+// ===============================
 
-  if (category) {
-    query = query.eq("category", category);
-  }
 
-  if (location) {
-    query = query.ilike("location", `%${location}%`);
-  }
+async function getProducts(
+  search,
+  category,
+  location
+){
 
-  const { data, error } = await query;
 
-  if (error) {
-    console.error(error);
-    return [];
-  }
+const supabase =
+await createClient();
 
-  return data ?? [];
+
+
+let query =
+supabase
+
+.from("products")
+
+.select(`
+
+id,
+
+title,
+
+price,
+
+image,
+
+location,
+
+slug,
+
+category,
+
+created_at,
+
+
+profiles(
+
+username,
+
+avatar,
+
+verified,
+
+seller_rating,
+
+sales_count
+
+)
+
+`)
+
+.order(
+"created_at",
+{
+ascending:false
+}
+)
+
+.limit(12);
+
+
+
+
+
+
+
+if(search){
+
+query =
+query.ilike(
+"title",
+`%${search}%`
+);
+
 }
 
-export const metadata = {
-  title: "Halo Marketplace | Buy & Sell Across Canada",
-  description:
-    "Canada's modern online marketplace. Buy and sell electronics, vehicles, furniture, gaming, tools and more.",
+
+
+
+if(category){
+
+query =
+query.eq(
+"category",
+category
+);
+
+}
+
+
+
+
+
+if(location){
+
+query =
+query.ilike(
+"location",
+`%${location}%`
+);
+
+}
+
+
+
+
+
+
+const {
+data,
+error
+}=await query;
+
+
+
+
+
+if(error){
+
+console.error(
+"Products error:",
+error
+);
+
+return [];
+
+}
+
+
+
+
+
+return data || [];
+
+}
+
+
+
+
+
+
+
+
+export const metadata={
+
+
+title:
+"Halo Marketplace Canada | Buy & Sell Locally",
+
+
+
+description:
+"Canada's trusted marketplace to buy and sell electronics, vehicles, furniture, gaming, tools and more."
+
 };
 
-function formatPrice(price) {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(price || 0);
+
+
+
+
+
+
+
+function formatPrice(price){
+
+
+return new Intl.NumberFormat(
+"en-CA",
+{
+
+style:"currency",
+
+currency:"CAD"
+
 }
 
-export default async function Home({ searchParams }) {
-  const params = await searchParams;
-
-  const search = params?.search || "";
-  const category = params?.category || "";
-  const location = params?.location || "";
-
-  const products = await getProducts(
-    search,
-    category,
-    location
-  );
+).format(
+price || 0
+);
 
-  const categories = [
-    { name: "Electronics", icon: "📱" },
-    { name: "Vehicles", icon: "🚗" },
-    { name: "Home", icon: "🏠" },
-    { name: "Gaming", icon: "🎮" },
-    { name: "Tools", icon: "🛠️" },
-    { name: "Sports", icon: "⚽" },
-  ];
-
-  return (
-    <main className="min-h-screen bg-gray-50">
 
-      {/* ================= HEADER ================= */}
-
-      <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
-          <Link
-            href="/"
-            className="text-2xl font-black tracking-tight"
-          >
-            Halo Marketplace
-          </Link>
-
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold">
-
-            <Link href="/" className="hover:text-indigo-600">
-              Home
-            </Link>
-
-            <Link href="/browse" className="hover:text-indigo-600">
-              Browse
-            </Link>
-
-            <Link href="/categories" className="hover:text-indigo-600">
-              Categories
-            </Link>
-
-            <Link href="/stores" className="hover:text-indigo-600">
-              Stores
-            </Link>
+}
 
-            <Link href="/sell" className="hover:text-indigo-600">
-              Sell
-            </Link>
 
-            <Link href="/dashboard" className="hover:text-indigo-600">
-              Dashboard
-            </Link>
 
-            <Link href="/messages" className="hover:text-indigo-600">
-              Messages
-            </Link>
-
-            <Link href="/favorites" className="hover:text-indigo-600">
-              Favorites
-            </Link>
 
-            <Link href="/support" className="hover:text-indigo-600">
-              Support
-            </Link>
 
-            <Link href="/about" className="hover:text-indigo-600">
-              About
-            </Link>
 
-            <Link href="/contact" className="hover:text-indigo-600">
-              Contact
-            </Link>
 
-          </nav>
 
-          <div className="flex items-center gap-3">
-
-            <Link
-              href="/login"
-              className="rounded-xl border px-5 py-2 font-semibold hover:bg-gray-100"
-            >
-              Login
-            </Link>
 
-            <Link
-              href="/signup"
-              className="rounded-xl bg-black px-5 py-2 font-semibold text-white hover:bg-gray-900"
-            >
-              Sign Up
-            </Link>
+export default async function Home({
+searchParams
+}){
 
-          </div>
 
-        </div>
-      </header>
 
-      {/* ================= HERO ================= */}
+const params =
+await searchParams;
 
-      <section className="bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white">
 
-        <div className="mx-auto max-w-7xl px-6 py-24">
 
-          <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">
-            🇨🇦 Canada's Marketplace
-          </span>
+const search =
+params?.search || "";
 
-          <h1 className="mt-8 max-w-4xl text-5xl font-black leading-tight md:text-7xl">
-            Buy, Sell & Discover
-            <br />
-            Anything Local.
-          </h1>
 
-          <p className="mt-8 max-w-2xl text-xl text-gray-300">
-            Halo Marketplace helps Canadians buy and sell everything from
-            electronics and vehicles to furniture, collectibles, tools,
-            gaming gear and much more.
-          </p>
 
-          <div className="mt-10 flex flex-wrap gap-4">
+const category =
+params?.category || "";
 
-            <Link
-              href="/sell"
-              className="rounded-xl bg-white px-8 py-4 font-bold text-black transition hover:scale-105"
-            >
-              Start Selling
-            </Link>
 
-            <Link
-              href="/browse"
-              className="rounded-xl border border-white px-8 py-4 font-bold transition hover:bg-white hover:text-black"
-            >
-              Browse Listings
-            </Link>
 
-          </div>
+const location =
+params?.location || "";
 
-        </div>
 
-      </section>
-          {/* ================= SEARCH ================= */}
 
-      <section className="-mt-10 px-6">
 
-        <div className="mx-auto max-w-7xl rounded-3xl bg-white p-8 shadow-xl">
 
-          <form
-            action="/"
-            className="grid gap-4 md:grid-cols-4"
-          >
 
-            <input
-              name="search"
-              defaultValue={search}
-              placeholder="Search products..."
-              className="rounded-xl border px-5 py-4 outline-none"
-            />
+const products =
+await getProducts(
+search,
+category,
+location
+);
 
 
-            <select
-              name="category"
-              defaultValue={category}
-              className="rounded-xl border px-5 py-4"
-            >
 
-              <option value="">
-                All Categories
-              </option>
 
-              {categories.map((cat) => (
 
-                <option
-                  key={cat.name}
-                  value={cat.name}
-                >
-                  {cat.name}
-                </option>
 
-              ))}
 
-            </select>
+const categories=[
 
 
+{
+name:"Electronics",
+icon:"📱"
+},
 
-            <select
-              name="location"
-              defaultValue={location}
-              className="rounded-xl border px-5 py-4"
-            >
 
-              <option value="">
-                All Canada
-              </option>
+{
+name:"Vehicles",
+icon:"🚗"
+},
 
-              <option value="Alberta">
-                Alberta
-              </option>
 
-              <option value="Ontario">
-                Ontario
-              </option>
+{
+name:"Home",
+icon:"🏠"
+},
 
-              <option value="British Columbia">
-                British Columbia
-              </option>
 
-              <option value="Quebec">
-                Quebec
-              </option>
+{
+name:"Gaming",
+icon:"🎮"
+},
 
-              <option value="Saskatchewan">
-                Saskatchewan
-              </option>
 
-            </select>
+{
+name:"Tools",
+icon:"🛠️"
+},
 
 
+{
+name:"Sports",
+icon:"⚽"
+}
 
-            <button
-              className="
-              rounded-xl
-              bg-black
-              px-6
-              py-4
-              font-bold
-              text-white
-              hover:bg-gray-800
-              "
-            >
-              Search
-            </button>
 
+];
 
-          </form>
 
-        </div>
 
-      </section>
 
 
 
 
 
-      {/* ================= QUICK LINKS ================= */}
+return (
 
-      <section className="px-6 py-20">
+<main className="
+min-h-screen
+bg-gray-50
+">
 
-        <div className="mx-auto max-w-7xl">
 
-          <div className="mb-10">
 
-            <h2 className="text-4xl font-black">
-              Explore Halo Marketplace
-            </h2>
 
-            <p className="mt-3 text-gray-600">
-              Everything you need to buy, sell, and manage your marketplace.
-            </p>
 
-          </div>
+{/* SEO MARKETPLACE SCHEMA */}
 
 
+<Script
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+id="halo-marketplace-schema"
 
+type="application/ld+json"
 
-            <Link
-              href="/browse"
-              className="
-              rounded-3xl
-              border
-              bg-white
-              p-7
-              transition
-              hover:-translate-y-1
-              hover:shadow-xl
-              "
-            >
+>
 
-              <div className="text-5xl">
-                🛍️
-              </div>
+{JSON.stringify({
 
-              <h3 className="mt-5 text-xl font-black">
-                Browse Listings
-              </h3>
+"@context":
+"https://schema.org",
 
-              <p className="mt-3 text-gray-600">
-                Find products from sellers across Canada.
-              </p>
 
-            </Link>
+"@type":
+"Marketplace",
 
 
+"name":
+"Halo Marketplace",
 
-            <Link
-              href="/sell"
-              className="
-              rounded-3xl
-              border
-              bg-white
-              p-7
-              transition
-              hover:-translate-y-1
-              hover:shadow-xl
-              "
-            >
 
-              <div className="text-5xl">
-                ➕
-              </div>
+"description":
+"Canada's modern marketplace for buying and selling locally.",
 
-              <h3 className="mt-5 text-xl font-black">
-                Sell Products
-              </h3>
 
-              <p className="mt-3 text-gray-600">
-                Create listings and reach buyers.
-              </p>
+"areaServed":
+{
 
-            </Link>
+"@type":
+"Country",
 
+"name":
+"Canada"
 
+}
 
 
-            <Link
-              href="/stores"
-              className="
-              rounded-3xl
-              border
-              bg-white
-              p-7
-              transition
-              hover:-translate-y-1
-              hover:shadow-xl
-              "
-            >
+})}
 
-              <div className="text-5xl">
-                🏪
-              </div>
 
-              <h3 className="mt-5 text-xl font-black">
-                Seller Stores
-              </h3>
+</Script>
 
-              <p className="mt-3 text-gray-600">
-                Discover trusted marketplace stores.
-              </p>
 
-            </Link>
 
 
 
 
-            <Link
-              href="/dashboard"
-              className="
-              rounded-3xl
-              border
-              bg-white
-              p-7
-              transition
-              hover:-translate-y-1
-              hover:shadow-xl
-              "
-            >
 
-              <div className="text-5xl">
-                📊
-              </div>
+{/* ================= HEADER ================= */}
 
-              <h3 className="mt-5 text-xl font-black">
-                Dashboard
-              </h3>
 
-              <p className="mt-3 text-gray-600">
-                Manage your listings and account.
-              </p>
 
-            </Link>
 
 
-          </div>
+<header className="
+sticky
+top-0
+z-50
+border-b
+bg-white/95
+backdrop-blur
+">
 
 
-        </div>
 
-      </section>
+<div className="
+mx-auto
+flex
+max-w-7xl
+items-center
+justify-between
+px-6
+py-4
+">
 
 
 
 
 
-      {/* ================= CATEGORIES ================= */}
+<Link
 
+href="/"
 
-      <section className="bg-white px-6 py-20">
+className="
+text-2xl
+font-black
+tracking-tight
+"
 
+>
 
-        <div className="mx-auto max-w-7xl">
+Halo Marketplace
 
+</Link>
 
-          <div className="flex items-center justify-between mb-10">
 
 
-            <h2 className="text-4xl font-black">
-              Shop Categories
-            </h2>
 
 
-            <Link
-              href="/categories"
-              className="font-bold text-indigo-600"
-            >
-              View All →
-            </Link>
 
+<nav className="
+hidden
+items-center
+gap-6
+lg:flex
+text-sm
+font-semibold
+">
 
-          </div>
 
 
+<Link href="/">
 
-          <div className="
-          grid
-          grid-cols-2
-          gap-5
-          md:grid-cols-3
-          lg:grid-cols-6
-          ">
+Home
 
+</Link>
 
-            {categories.map((cat) => (
 
-              <Link
 
-                key={cat.name}
+<Link href="/browse">
 
-                href={`/?category=${cat.name}`}
+Browse
 
-                className="
-                rounded-3xl
-                border
-                bg-gray-50
-                p-8
-                text-center
-                transition
-                hover:-translate-y-1
-                hover:shadow-lg
-                "
+</Link>
 
-              >
 
-                <div className="text-5xl">
-                  {cat.icon}
-                </div>
 
+<Link href="/categories">
 
-                <h3 className="mt-4 font-bold">
-                  {cat.name}
-                </h3>
+Categories
 
+</Link>
 
-              </Link>
 
-            ))}
 
+<Link href="/stores">
 
-          </div>
+Stores
 
+</Link>
 
-        </div>
 
 
-      </section>
+<Link href="/sell">
 
+Sell
 
+</Link>
 
 
 
-      {/* ================= TRUST ================= */}
+<Link href="/messages">
 
+Messages
 
-      <section className="bg-gray-100 px-6 py-16">
+</Link>
 
-        <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-4">
 
 
-          {[
-            ["🇨🇦","Canada Wide","Local buying and selling across Canada"],
-            ["🔒","Secure","Safe accounts and marketplace tools"],
-            ["⭐","Trusted","Connect with verified sellers"],
-            ["⚡","Simple","List products quickly"]
-          ].map(item => (
+<Link href="/favorites">
 
-            <div
-              key={item[1]}
-              className="
-              rounded-3xl
-              bg-white
-              p-8
-              text-center
-              "
-            >
+Favorites
 
-              <div className="text-4xl">
-                {item[0]}
-              </div>
+</Link>
 
-              <h3 className="mt-4 text-xl font-black">
-                {item[1]}
-              </h3>
 
-              <p className="mt-2 text-gray-600">
-                {item[2]}
-              </p>
 
-            </div>
+<Link href="/dashboard">
 
-          ))}
+Dashboard
 
+</Link>
 
-        </div>
 
-      </section>
-          {/* ================= LATEST LISTINGS ================= */}
 
-      <section className="px-6 py-20">
+</nav>
 
-        <div className="mx-auto max-w-7xl">
 
 
-          <div className="mb-10 flex items-center justify-between">
 
-            <div>
 
-              <h2 className="text-4xl font-black">
-                Latest Listings
-              </h2>
+<div className="
+flex
+gap-3
+">
 
-              <p className="mt-3 text-gray-600">
-                Discover the newest products added to Halo Marketplace.
-              </p>
 
-            </div>
+<Link
 
+href="/login"
 
-            <Link
-              href="/browse"
-              className="
-              hidden
-              rounded-xl
-              border
-              px-6
-              py-3
-              font-bold
-              md:block
-              hover:bg-gray-100
-              "
-            >
-              View All →
-            </Link>
+className="
+rounded-xl
+border
+px-5
+py-2
+font-bold
+"
 
+>
 
-          </div>
+Login
 
+</Link>
 
 
 
 
-          {products.length === 0 ? (
 
-            <div className="
-            rounded-3xl
-            bg-gray-100
-            p-12
-            text-center
-            ">
+<Link
 
-              <div className="text-5xl">
-                📦
-              </div>
+href="/signup"
 
+className="
+rounded-xl
+bg-black
+px-5
+py-2
+font-bold
+text-white
+"
 
-              <h3 className="
-              mt-5
-              text-2xl
-              font-black
-              ">
+>
 
-                No listings found
+Sign Up
 
-              </h3>
+</Link>
 
 
-              <p className="
-              mt-3
-              text-gray-600
-              ">
 
-                Be the first seller on Halo Marketplace.
+</div>
 
-              </p>
 
 
-              <Link
-                href="/sell"
-                className="
-                mt-6
-                inline-block
-                rounded-xl
-                bg-black
-                px-8
-                py-4
-                font-bold
-                text-white
-                "
-              >
 
-                Create Listing
 
-              </Link>
 
+</div>
 
-            </div>
 
+</header>
+{/* ================= HERO ================= */}
 
-          ) : (
 
+<section className="
+bg-gradient-to-br
+from-black
+via-gray-900
+to-gray-800
+text-white
+">
 
-            <div className="
-            grid
-            gap-6
-            sm:grid-cols-2
-            lg:grid-cols-4
-            ">
 
+<div className="
+mx-auto
+max-w-7xl
+px-6
+py-24
+">
 
-              {products.map((product) => (
 
-                <Link
 
-                  key={product.id}
+<span className="
+inline-flex
+rounded-full
+bg-white/10
+px-4
+py-2
+text-sm
+font-bold
+">
 
-                  href={`/product/${product.slug}`}
+🇨🇦 Canada's Trusted Marketplace
 
-                  className="
-                  group
-                  overflow-hidden
-                  rounded-3xl
-                  border
-                  bg-white
-                  transition
-                  hover:-translate-y-1
-                  hover:shadow-xl
-                  "
+</span>
 
-                >
 
 
-                  {/* IMAGE */}
 
-                  <div className="
-                  relative
-                  h-60
-                  bg-gray-100
-                  ">
 
+<h1 className="
+mt-8
+max-w-5xl
+text-5xl
+font-black
+leading-tight
+md:text-7xl
+">
 
-                    {product.image ? (
 
-                      <Image
+Buy, Sell & Discover
 
-                        src={product.image}
+<br />
 
-                        alt={product.title}
+Anything Across Canada
 
-                        fill
 
-                        className="
-                        object-cover
-                        transition
-                        duration-300
-                        group-hover:scale-105
-                        "
+</h1>
 
-                      />
 
 
-                    ) : (
 
 
-                      <div className="
-                      flex
-                      h-full
-                      items-center
-                      justify-center
-                      text-6xl
-                      ">
 
-                        📦
+<p className="
+mt-8
+max-w-3xl
+text-xl
+text-gray-300
+">
 
-                      </div>
 
+Halo Marketplace connects buyers and sellers with verified profiles,
+secure messaging, and local deals across Canada.
 
-                    )}
 
+</p>
 
-                  </div>
 
 
 
 
 
-                  {/* DETAILS */}
 
-                  <div className="p-6">
+<div className="
+mt-10
+flex
+flex-wrap
+gap-4
+">
 
 
-                    <div className="
-                    mb-3
-                    flex
-                    items-center
-                    justify-between
-                    ">
 
+<Link
 
-                      <span className="
-                      rounded-full
-                      bg-gray-100
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      ">
+href="/sell"
 
-                        {product.category || "General"}
+className="
+rounded-xl
+bg-white
+px-8
+py-4
+font-black
+text-black
+transition
+hover:scale-105
+"
 
-                      </span>
+>
 
+Start Selling
 
-                      <span className="
-                      text-sm
-                      text-gray-500
-                      ">
+</Link>
 
-                        ⭐ Verified
 
-                      </span>
 
 
-                    </div>
 
 
+<Link
 
+href="/browse"
 
+className="
+rounded-xl
+border
+border-white
+px-8
+py-4
+font-black
+transition
+hover:bg-white
+hover:text-black
+"
 
-                    <h3 className="
-                    truncate
-                    text-lg
-                    font-black
-                    ">
+>
 
-                      {product.title}
+Browse Listings
 
-                    </h3>
+</Link>
 
 
 
 
 
-                    <p className="
-                    mt-3
-                    text-sm
-                    text-gray-500
-                    ">
 
-                      📍 {product.location || "Canada"}
+</div>
 
-                    </p>
 
 
 
 
+</div>
 
-                    <p className="
-                    mt-4
-                    text-2xl
-                    font-black
-                    ">
 
-                      {formatPrice(product.price)}
+</section>
 
-                    </p>
 
 
 
-                    <button
-                      className="
-                      mt-5
-                      w-full
-                      rounded-xl
-                      bg-black
-                      py-3
-                      font-bold
-                      text-white
-                      transition
-                      group-hover:bg-gray-800
-                      "
-                    >
 
-                      View Product
 
-                    </button>
 
+{/* ================= SEARCH ================= */}
 
-                  </div>
 
 
-                </Link>
+<section className="
+relative
+-z-0
+px-6
+- mt-10
+">
 
 
-              ))}
+<div className="
+mx-auto
+max-w-7xl
+rounded-3xl
+bg-white
+p-8
+shadow-xl
+">
 
 
-            </div>
 
+<form
 
-          )}
+action="/"
 
+className="
+grid
+gap-4
+md:grid-cols-4
+"
 
-        </div>
+>
 
 
-      </section>
 
+<input
 
+name="search"
 
+defaultValue={search}
 
+placeholder="Search products..."
 
-      {/* ================= HOW IT WORKS ================= */}
+className="
+rounded-xl
+border
+px-5
+py-4
+outline-none
+"
 
+/>
 
-      <section className="bg-gray-100 px-6 py-20">
 
 
-        <div className="mx-auto max-w-7xl">
 
 
-          <h2 className="
-          text-center
-          text-4xl
-          font-black
-          ">
 
-            How Halo Works
+<select
 
-          </h2>
+name="category"
 
+defaultValue={category}
 
+className="
+rounded-xl
+border
+px-5
+py-4
+"
 
+>
 
-          <div className="
-          mt-12
-          grid
-          gap-6
-          md:grid-cols-4
-          ">
 
+<option value="">
 
-            {[
+All Categories
 
-              ["1","Find Products"],
-              ["2","Message Sellers"],
-              ["3","Complete Purchase"],
-              ["4","Enjoy Your Item"]
+</option>
 
-            ].map(step => (
 
 
-              <div
+{categories.map(cat=>(
 
-                key={step[0]}
 
-                className="
-                rounded-3xl
-                bg-white
-                p-8
-                text-center
-                "
+<option
 
-              >
+key={cat.name}
 
+value={cat.name}
 
-                <div className="
-                text-5xl
-                font-black
-                ">
+>
 
-                  {step[0]}
+{cat.name}
 
-                </div>
+</option>
 
 
-                <h3 className="
-                mt-4
-                text-xl
-                font-bold
-                ">
 
-                  {step[1]}
+))}
 
-                </h3>
 
 
-              </div>
+</select>
 
 
-            ))}
 
 
-          </div>
 
 
-        </div>
 
 
-      </section>
-          {/* ================= SELLER CTA ================= */}
+<select
 
-      <section className="bg-black px-6 py-24 text-white">
+name="location"
 
-        <div className="mx-auto max-w-5xl text-center">
+defaultValue={location}
 
-          <h2 className="
-          text-5xl
-          font-black
-          md:text-6xl
-          ">
+className="
+rounded-xl
+border
+px-5
+py-4
+"
 
-            Ready to Sell on Halo?
+>
 
-          </h2>
 
 
-          <p className="
-          mx-auto
-          mt-6
-          max-w-2xl
-          text-xl
-          text-gray-300
-          ">
+<option value="">
 
-            Create your free listing and connect with buyers across Canada.
+All Canada
 
-          </p>
+</option>
 
 
 
-          <div className="
-          mt-10
-          flex
-          flex-wrap
-          justify-center
-          gap-4
-          ">
+<option value="Alberta">
 
+Alberta
 
-            <Link
+</option>
 
-              href="/sell"
 
-              className="
-              rounded-xl
-              bg-white
-              px-10
-              py-4
-              font-black
-              text-black
-              "
 
-            >
+<option value="Ontario">
 
-              Create Listing
+Ontario
 
-            </Link>
+</option>
 
 
 
+<option value="British Columbia">
 
-            <Link
+British Columbia
 
-              href="/browse"
+</option>
 
-              className="
-              rounded-xl
-              border
-              border-white
-              px-10
-              py-4
-              font-black
-              "
 
-            >
 
-              Browse Marketplace
+<option value="Quebec">
 
-            </Link>
+Quebec
 
+</option>
 
-          </div>
 
 
-        </div>
+<option value="Saskatchewan">
 
+Saskatchewan
 
-      </section>
+</option>
 
 
 
+</select>
 
 
-      {/* ================= FOOTER ================= */}
 
 
-      <footer className="bg-white border-t">
 
 
-        <div className="
-        mx-auto
-        max-w-7xl
-        px-6
-        py-16
-        ">
 
 
-          <div className="
-          grid
-          gap-10
-          md:grid-cols-4
-          ">
+<button
 
+className="
+rounded-xl
+bg-black
+px-6
+py-4
+font-black
+text-white
+hover:bg-gray-800
+"
 
-            {/* BRAND */}
+>
 
+Search Halo
 
-            <div>
+</button>
 
 
-              <Link
 
-                href="/"
 
-                className="
-                text-2xl
-                font-black
-                "
+</form>
 
-              >
 
-                Halo Marketplace
 
-              </Link>
+</div>
 
 
+</section>
 
-              <p className="
-              mt-4
-              text-gray-600
-              ">
 
-                Canada's modern marketplace for buying and selling locally.
 
-              </p>
 
 
-            </div>
 
 
+{/* ================= QUICK ACTIONS ================= */}
 
 
 
-            {/* MARKETPLACE */}
+<section className="
+px-6
+py-20
+">
 
 
-            <div>
+<div className="
+mx-auto
+max-w-7xl
+">
 
 
-              <h3 className="
-              font-black
-              ">
 
-                Marketplace
 
-              </h3>
 
+<h2 className="
+text-4xl
+font-black
+">
 
-              <div className="
-              mt-5
-              flex
-              flex-col
-              gap-3
-              text-gray-600
-              ">
+Everything Marketplace
 
+</h2>
 
-                <Link href="/browse">
-                  Browse Listings
-                </Link>
 
 
-                <Link href="/categories">
-                  Categories
-                </Link>
 
+<p className="
+mt-3
+text-gray-600
+">
 
-                <Link href="/stores">
-                  Stores
-                </Link>
+Buy, sell, communicate and manage your Halo account.
 
+</p>
 
-                <Link href="/sell">
-                  Sell
-                </Link>
 
 
-              </div>
 
 
-            </div>
 
 
+<div className="
+mt-10
+grid
+gap-6
+sm:grid-cols-2
+lg:grid-cols-4
+">
 
 
 
-            {/* ACCOUNT */}
 
 
-            <div>
 
+<Link
 
-              <h3 className="
-              font-black
-              ">
+href="/browse"
 
-                Account
+className="
+rounded-3xl
+border
+bg-white
+p-8
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
 
-              </h3>
+>
 
 
-              <div className="
-              mt-5
-              flex
-              flex-col
-              gap-3
-              text-gray-600
-              ">
+<div className="
+text-5xl
+">
 
+🛍️
 
-                <Link href="/login">
-                  Login
-                </Link>
+</div>
 
 
-                <Link href="/signup">
-                  Create Account
-                </Link>
+<h3 className="
+mt-5
+text-xl
+font-black
+">
 
+Browse Products
 
-                <Link href="/dashboard">
-                  Dashboard
-                </Link>
+</h3>
 
 
-                <Link href="/messages">
-                  Messages
-                </Link>
+<p className="
+mt-3
+text-gray-600
+">
 
+Discover thousands of local listings.
 
-                <Link href="/favorites">
-                  Favorites
-                </Link>
+</p>
 
 
-              </div>
+</Link>
 
 
-            </div>
 
 
 
 
 
-            {/* COMPANY */}
+<Link
 
+href="/sell"
 
-            <div>
+className="
+rounded-3xl
+border
+bg-white
+p-8
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
 
+>
 
-              <h3 className="
-              font-black
-              ">
 
-                Company
+<div className="
+text-5xl
+">
 
-              </h3>
+➕
 
+</div>
 
-              <div className="
-              mt-5
-              flex
-              flex-col
-              gap-3
-              text-gray-600
-              ">
 
+<h3 className="
+mt-5
+text-xl
+font-black
+">
 
-                <Link href="/about">
-                  About
-                </Link>
+Sell Faster
 
+</h3>
 
-                <Link href="/support">
-                  Support
-                </Link>
 
+<p className="
+mt-3
+text-gray-600
+">
 
-                <Link href="/contact">
-                  Contact
-                </Link>
+Create listings and reach buyers.
 
+</p>
 
-                <Link href="/privacy">
-                  Privacy Policy
-                </Link>
 
+</Link>
 
-                <Link href="/terms">
-                  Terms
-                </Link>
 
 
-              </div>
 
 
-            </div>
 
 
-          </div>
+<Link
 
+href="/stores"
 
+className="
+rounded-3xl
+border
+bg-white
+p-8
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
 
+>
 
 
-          <div className="
-          mt-12
-          border-t
-          pt-8
-          text-center
-          text-sm
-          text-gray-500
-          ">
+<div className="
+text-5xl
+">
 
+🏪
 
-            © {new Date().getFullYear()} Halo Marketplace. All rights reserved.
+</div>
 
 
-          </div>
+<h3 className="
+mt-5
+text-xl
+font-black
+">
 
+Seller Stores
 
+</h3>
 
-        </div>
 
+<p className="
+mt-3
+text-gray-600
+">
 
-      </footer>
+Build trust with your own store.
 
+</p>
 
-    </main>
-  );
+
+</Link>
+
+
+
+
+
+
+
+<Link
+
+href="/dashboard"
+
+className="
+rounded-3xl
+border
+bg-white
+p-8
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
+
+>
+
+
+<div className="
+text-5xl
+">
+
+📊
+
+</div>
+
+
+<h3 className="
+mt-5
+text-xl
+font-black
+">
+
+Dashboard
+
+</h3>
+
+
+<p className="
+mt-3
+text-gray-600
+">
+
+Manage sales and listings.
+
+</p>
+
+
+</Link>
+
+
+
+
+
+
+
+</div>
+
+
+</div>
+
+
+</section>
+{/* ================= FEATURED PRODUCTS ================= */}
+
+
+<section className="
+bg-black
+px-6
+py-20
+text-white
+">
+
+
+<div className="
+mx-auto
+max-w-7xl
+">
+
+
+
+<div className="
+flex
+items-center
+justify-between
+">
+
+
+
+
+<div>
+
+<h2 className="
+text-4xl
+font-black
+">
+
+🔥 Featured on Halo
+
+</h2>
+
+
+<p className="
+mt-3
+text-gray-300
+">
+
+Popular listings from trusted sellers.
+
+</p>
+
+
+</div>
+
+
+
+
+<Link
+
+href="/browse"
+
+className="
+rounded-xl
+border
+border-white
+px-5
+py-3
+font-bold
+"
+
+>
+
+View All
+
+</Link>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="
+mt-10
+grid
+gap-6
+sm:grid-cols-2
+lg:grid-cols-4
+">
+
+
+{products.slice(0,4).map(product=>(
+
+
+
+<Link
+
+key={product.id}
+
+href={`/product/${product.slug}`}
+
+className="
+overflow-hidden
+rounded-3xl
+bg-white
+text-black
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
+
+>
+
+
+
+<div className="
+relative
+h-56
+bg-gray-100
+">
+
+
+
+{product.image ? (
+
+
+<Image
+
+src={product.image}
+
+alt={product.title}
+
+fill
+
+className="
+object-cover
+"
+
+/>
+
+
+):(
+
+
+<div className="
+flex
+h-full
+items-center
+justify-center
+text-5xl
+">
+
+📦
+
+</div>
+
+
+)}
+
+
+
+</div>
+
+
+
+
+
+
+<div className="p-5">
+
+
+<div className="
+flex
+items-center
+justify-between
+">
+
+
+<span className="
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-xs
+font-bold
+">
+
+{product.category || "General"}
+
+</span>
+
+
+
+
+{product.profiles?.verified && (
+
+<span className="
+text-xs
+font-bold
+text-green-600
+">
+
+✓ Verified
+
+</span>
+
+
+)}
+
+
+</div>
+
+
+
+
+
+<h3 className="
+mt-4
+truncate
+text-lg
+font-black
+">
+
+{product.title}
+
+</h3>
+
+
+
+
+
+
+<p className="
+mt-2
+text-xl
+font-black
+">
+
+{formatPrice(product.price)}
+
+</p>
+
+
+
+
+
+<p className="
+mt-2
+text-sm
+text-gray-500
+">
+
+📍 {product.location || "Canada"}
+
+</p>
+
+
+
+</div>
+
+
+
+
+</Link>
+
+
+
+))}
+
+
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+{/* ================= SHOP CATEGORIES ================= */}
+
+
+
+<section className="
+bg-white
+px-6
+py-20
+">
+
+
+
+<div className="
+mx-auto
+max-w-7xl
+">
+
+
+
+<div className="
+flex
+items-center
+justify-between
+mb-10
+">
+
+
+<h2 className="
+text-4xl
+font-black
+">
+
+Shop Categories
+
+</h2>
+
+
+
+
+<Link
+
+href="/categories"
+
+className="
+font-bold
+text-indigo-600
+"
+
+>
+
+View All →
+
+</Link>
+
+
+
+</div>
+{/* ================= LATEST LISTINGS ================= */}
+
+
+<section className="
+px-6
+py-20
+">
+
+
+<div className="
+mx-auto
+max-w-7xl
+">
+
+
+
+<div className="
+mb-10
+flex
+items-center
+justify-between
+">
+
+
+<div>
+
+
+<h2 className="
+text-4xl
+font-black
+">
+
+Latest Listings
+
+</h2>
+
+
+
+<p className="
+mt-3
+text-gray-600
+">
+
+New products added by Halo sellers.
+
+</p>
+
+
+</div>
+
+
+
+
+<Link
+
+href="/browse"
+
+className="
+rounded-xl
+border
+px-6
+py-3
+font-bold
+hover:bg-gray-100
+"
+
+>
+
+Browse All →
+
+</Link>
+
+
+
+</div>
+
+
+
+
+
+
+
+{products.length === 0 ? (
+
+
+
+<div className="
+rounded-3xl
+bg-gray-100
+p-12
+text-center
+">
+
+
+<div className="
+text-6xl
+">
+
+📦
+
+</div>
+
+
+<h3 className="
+mt-5
+text-2xl
+font-black
+">
+
+No listings yet
+
+</h3>
+
+
+
+<p className="
+mt-3
+text-gray-600
+">
+
+Be the first seller on Halo Marketplace.
+
+</p>
+
+
+
+<Link
+
+href="/sell"
+
+className="
+mt-6
+inline-block
+rounded-xl
+bg-black
+px-8
+py-4
+font-bold
+text-white
+"
+
+>
+
+Create Listing
+
+</Link>
+
+
+
+</div>
+
+
+
+
+):(
+
+
+
+
+<div className="
+grid
+gap-6
+sm:grid-cols-2
+lg:grid-cols-4
+">
+
+
+
+
+
+{products.map(product=>(
+
+
+
+<Link
+
+key={product.id}
+
+href={`/product/${product.slug}`}
+
+className="
+group
+overflow-hidden
+rounded-3xl
+border
+bg-white
+transition
+hover:-translate-y-1
+hover:shadow-xl
+"
+
+>
+
+
+
+
+<div className="
+relative
+h-60
+bg-gray-100
+">
+
+
+
+{product.image ? (
+
+
+<Image
+
+src={product.image}
+
+alt={product.title}
+
+fill
+
+className="
+object-cover
+transition
+duration-300
+group-hover:scale-105
+"
+
+/>
+
+
+
+):(
+
+
+<div className="
+flex
+h-full
+items-center
+justify-center
+text-6xl
+">
+
+📦
+
+</div>
+
+
+)}
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="
+p-6
+">
+
+
+
+
+
+<div className="
+flex
+items-center
+justify-between
+">
+
+
+<span className="
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-xs
+font-bold
+">
+
+{product.category || "General"}
+
+</span>
+
+
+
+
+{product.profiles?.verified && (
+
+<span className="
+text-xs
+font-bold
+text-green-600
+">
+
+✓ Verified Seller
+
+</span>
+
+
+)}
+
+
+
+</div>
+
+
+
+
+
+
+<h3 className="
+mt-4
+truncate
+text-lg
+font-black
+">
+
+{product.title}
+
+</h3>
+
+
+
+
+
+<p className="
+mt-3
+text-sm
+text-gray-500
+">
+
+📍 {product.location || "Canada"}
+
+</p>
+
+
+
+
+
+
+<p className="
+mt-4
+text-2xl
+font-black
+">
+
+{formatPrice(product.price)}
+
+</p>
+
+
+
+
+</div>
+
+
+
+
+
+</Link>
+
+
+
+))}
+
+
+
+</div>
+
+
+
+)}
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+{/* ================= SELLER CTA ================= */}
+
+
+
+<section className="
+bg-black
+px-6
+py-24
+text-white
+">
+
+
+
+<div className="
+mx-auto
+max-w-5xl
+text-center
+">
+
+
+
+<h2 className="
+text-5xl
+font-black
+md:text-6xl
+">
+
+Start Selling On Halo
+
+</h2>
+
+
+
+<p className="
+mt-6
+text-xl
+text-gray-300
+">
+
+Reach buyers across Canada with your own marketplace profile.
+
+</p>
+
+
+
+
+
+
+<div className="
+mt-10
+flex
+flex-wrap
+justify-center
+gap-4
+">
+
+
+<Link
+
+href="/sell"
+
+className="
+rounded-xl
+bg-white
+px-10
+py-4
+font-black
+text-black
+"
+
+>
+
+Create Listing
+
+</Link>
+
+
+
+
+
+<Link
+
+href="/dashboard"
+
+className="
+rounded-xl
+border
+border-white
+px-10
+py-4
+font-black
+"
+
+>
+
+Seller Dashboard
+
+</Link>
+
+
+
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+
+{/* ================= FOOTER ================= */}
+
+
+
+<footer className="
+border-t
+bg-white
+px-6
+py-16
+">
+
+
+
+<div className="
+mx-auto
+max-w-7xl
+">
+
+
+
+
+
+<div className="
+grid
+gap-10
+md:grid-cols-4
+">
+
+
+
+
+
+<div>
+
+
+<h3 className="
+text-2xl
+font-black
+">
+
+Halo Marketplace
+
+</h3>
+
+
+
+<p className="
+mt-4
+text-gray-600
+">
+
+Canada's modern marketplace for buying and selling locally.
+
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div>
+
+
+<h4 className="
+font-black
+">
+
+Marketplace
+
+</h4>
+
+
+<div className="
+mt-4
+flex
+flex-col
+gap-3
+text-gray-600
+">
+
+
+<Link href="/browse">
+Browse
+</Link>
+
+
+<Link href="/categories">
+Categories
+</Link>
+
+
+<Link href="/stores">
+Stores
+</Link>
+
+
+<Link href="/sell">
+Sell
+</Link>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div>
+
+
+<h4 className="
+font-black
+">
+
+Account
+
+</h4>
+
+
+<div className="
+mt-4
+flex
+flex-col
+gap-3
+text-gray-600
+">
+
+
+<Link href="/login">
+Login
+</Link>
+
+
+<Link href="/signup">
+Signup
+</Link>
+
+
+<Link href="/dashboard">
+Dashboard
+</Link>
+
+
+<Link href="/messages">
+Messages
+</Link>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div>
+
+
+<h4 className="
+font-black
+">
+
+Company
+
+</h4>
+
+
+<div className="
+mt-4
+flex
+flex-col
+gap-3
+text-gray-600
+">
+
+
+<Link href="/about">
+About
+</Link>
+
+
+<Link href="/support">
+Support
+</Link>
+
+
+<Link href="/contact">
+Contact
+</Link>
+
+
+<Link href="/privacy">
+Privacy
+</Link>
+
+
+<Link href="/terms">
+Terms
+</Link>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+<div className="
+mt-12
+border-t
+pt-8
+text-center
+text-sm
+text-gray-500
+">
+
+
+© {new Date().getFullYear()} Halo Marketplace. All rights reserved.
+
+
+</div>
+
+
+
+
+</div>
+
+
+</footer>
+
+
+
+
+</main>
+
+);
+
 }
