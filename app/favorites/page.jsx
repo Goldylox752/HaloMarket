@@ -7,83 +7,101 @@ import { createClient } from "@/lib/supabase/server";
 
 async function getFavorites(){
 
-
-const supabase = await createClient();
-
+  const supabase = await createClient();
 
 
-const {
-data:{
-user
+
+  const {
+    data:{
+      user
+    }
+  } = await supabase.auth.getUser();
+
+
+
+  if(!user){
+
+    redirect("/login");
+
+  }
+
+
+
+  const {
+    data:favorites,
+    error
+  } = await supabase
+
+  .from("favorites")
+
+  .select("product_id, created_at")
+
+  .eq("user_id", user.id)
+
+  .order("created_at", {
+    ascending:false
+  });
+
+
+
+  if(error){
+
+    console.log("Favorites error:", error);
+
+    return [];
+
+  }
+
+
+
+  if(!favorites || favorites.length === 0){
+
+    return [];
+
+  }
+
+
+
+  const productIds = favorites.map(
+    favorite => favorite.product_id
+  );
+
+
+
+  const {
+    data:products,
+    error:productError
+  } = await supabase
+
+  .from("products")
+
+  .select(`
+    id,
+    title,
+    price,
+    image,
+    location,
+    slug,
+    category
+  `)
+
+  .in("id", productIds);
+
+
+
+  if(productError){
+
+    console.log("Products error:", productError);
+
+    return [];
+
+  }
+
+
+
+  return products || [];
+
 }
-
-} = await supabase.auth.getUser();
-
-
-
-if(!user){
-
-redirect("/login");
-
-}
-
-
-
-
-
-const {data:favorites,error} = await supabase
-
-.from("favorites")
-
-.select(`
-
-id,
-
-products (
-
-id,
-
-title,
-
-price,
-
-image,
-
-location,
-
-slug,
-
-category
-
-)
-
-`)
-
-.eq("user_id", user.id)
-
-.order("created_at", {
-ascending:false
-});
-
-
-
-
-
-if(error){
-
-console.log(error);
-
-return [];
-
-}
-
-
-
-return favorites || [];
-
-
-}
-
 
 
 
@@ -91,10 +109,10 @@ return favorites || [];
 
 export const metadata = {
 
-title:"My Favorites | Halo Marketplace",
+  title:"My Favorites | Halo Marketplace",
 
-description:
-"View your saved Halo Marketplace listings."
+  description:
+  "View your saved listings on Halo Marketplace."
 
 };
 
@@ -107,7 +125,7 @@ description:
 export default async function FavoritesPage(){
 
 
-const favorites = await getFavorites();
+const products = await getFavorites();
 
 
 
@@ -119,12 +137,10 @@ return (
 
 
 
-{/* HEADER */}
-
 <section className="
 bg-black
 text-white
-py-14
+py-16
 px-6
 ">
 
@@ -137,10 +153,10 @@ mx-auto
 
 <h1 className="
 text-5xl
-font-bold
+font-black
 ">
 
-My Favorites
+❤️ My Favorites
 
 </h1>
 
@@ -148,9 +164,10 @@ My Favorites
 <p className="
 mt-4
 text-gray-300
+text-lg
 ">
 
-Saved listings you want to keep an eye on.
+Listings you saved for later.
 
 </p>
 
@@ -178,206 +195,20 @@ py-12
 
 
 {
-favorites.length > 0 ? (
-
-
-
-<div className="
-grid
-grid-cols-1
-sm:grid-cols-2
-lg:grid-cols-4
-gap-6
-">
-
-
-{
-
-favorites.map((favorite)=>(
-
-
-favorite.products && (
-
-
-<Link
-
-key={favorite.id}
-
-href={`/product/${favorite.products.slug}`}
-
-className="
-bg-white
-rounded-2xl
-overflow-hidden
-shadow-sm
-hover:shadow-xl
-transition
-"
-
-
->
-
-
-<div className="
-relative
-h-56
-bg-gray-100
-">
-
-
-{
-
-favorite.products.image ? (
-
-
-<Image
-
-src={favorite.products.image}
-
-alt={favorite.products.title}
-
-fill
-
-sizes="(max-width:768px)100vw,25vw"
-
-className="object-cover"
-
-/>
-
-
-):(
-
-
-<div className="
-h-full
-flex
-items-center
-justify-center
-text-gray-400
-">
-
-No Image
-
-</div>
-
-
-)
-
-
-}
-
-
-</div>
-
-
-
-
-
-
-
-<div className="p-5">
-
-
-<h2 className="
-font-bold
-text-lg
-truncate
-">
-
-{favorite.products.title}
-
-</h2>
-
-
-
-<p className="
-text-xl
-font-bold
-mt-3
-">
-
-${Number(
-favorite.products.price
-).toLocaleString()}
-
-</p>
-
-
-
-<p className="
-text-sm
-text-gray-500
-mt-2
-">
-
-📍 {favorite.products.location}
-
-</p>
-
-
-
-
-{
-favorite.products.category && (
-
-
-<span className="
-inline-block
-mt-4
-bg-gray-100
-rounded-full
-px-3
-py-1
-text-sm
-">
-
-{favorite.products.category}
-
-</span>
-
-
-)
-
-}
-
-
-
-
-</div>
-
-
-
-</Link>
-
-
-)
-
-
-))
-
-
-}
-
-
-
-</div>
-
-
-
-):(
-
+products.length === 0 ? (
 
 
 <div className="
 bg-white
-rounded-2xl
+rounded-3xl
 p-12
 text-center
+shadow
 ">
 
 
 <h2 className="
-text-2xl
+text-3xl
 font-bold
 ">
 
@@ -387,11 +218,11 @@ No favorites yet
 
 
 <p className="
+mt-4
 text-gray-500
-mt-3
 ">
 
-Save listings you are interested in.
+Browse Halo Marketplace and save listings you like.
 
 </p>
 
@@ -404,11 +235,12 @@ href="/browse"
 className="
 inline-block
 mt-6
-bg-black
-text-white
-px-6
-py-3
 rounded-xl
+bg-black
+px-8
+py-3
+font-bold
+text-white
 "
 
 >
@@ -418,9 +250,191 @@ Browse Listings
 </Link>
 
 
+</div>
+
+
+
+):(
+
+
+
+<div className="
+grid
+grid-cols-1
+sm:grid-cols-2
+lg:grid-cols-4
+gap-6
+">
+
+
+
+{
+
+products.map((product)=>(
+
+
+<Link
+
+key={product.id}
+
+href={`/product/${product.slug}`}
+
+className="
+overflow-hidden
+rounded-2xl
+bg-white
+shadow-sm
+transition
+hover:shadow-xl
+"
+
+>
+
+
+
+<div className="
+relative
+h-56
+bg-gray-100
+">
+
+
+{
+
+product.image ? (
+
+
+<Image
+
+src={product.image}
+
+alt={product.title}
+
+fill
+
+sizes="
+(max-width:768px) 100vw,
+25vw
+"
+
+className="
+object-cover
+"
+
+/>
+
+
+):(
+
+
+<div className="
+flex
+h-full
+items-center
+justify-center
+text-gray-400
+">
+
+No Image
 
 </div>
 
+
+)
+
+}
+
+
+</div>
+
+
+
+
+
+
+<div className="p-5">
+
+
+<h2 className="
+truncate
+text-lg
+font-bold
+">
+
+{product.title}
+
+</h2>
+
+
+
+<p className="
+mt-3
+text-2xl
+font-black
+">
+
+${Number(product.price).toLocaleString("en-CA")}
+
+</p>
+
+
+
+
+<p className="
+mt-2
+text-sm
+text-gray-500
+">
+
+📍 {product.location || "Canada"}
+
+</p>
+
+
+
+
+{
+
+product.category && (
+
+
+<span className="
+mt-4
+inline-block
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-sm
+font-medium
+">
+
+{product.category}
+
+</span>
+
+
+)
+
+}
+
+
+
+</div>
+
+
+
+</Link>
+
+
+))
+
+
+}
+
+
+
+</div>
 
 
 )
@@ -436,6 +450,5 @@ Browse Listings
 </main>
 
 );
-
 
 }
