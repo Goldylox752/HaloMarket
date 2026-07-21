@@ -1,61 +1,74 @@
-export default function SellerBadge({verified,rating}){
+export default function SellerBadge({
+verified,
+identity_verified,
+trust_score
+}){
+
+
+if(identity_verified){
 
 return (
 
-<div className="flex items-center gap-2">
+<span className="
+rounded-full
+bg-blue-100
+px-3
+py-1
+text-sm
+font-bold
+text-blue-700
+">
+
+🔵 Verified Seller
+
+</span>
+
+);
+
+}
 
 
-{verified ? (
+
+if(verified){
+
+return (
 
 <span className="
 rounded-full
 bg-green-100
 px-3
 py-1
-text-xs
+text-sm
 font-bold
 text-green-700
 ">
 
-✓ Verified Seller
+🟢 Trusted Seller
 
 </span>
 
-):(
+);
+
+}
+
+
+
+return (
 
 <span className="
 rounded-full
 bg-gray-100
 px-3
 py-1
-text-xs
+text-sm
 font-bold
 ">
 
-New Seller
+⚪ New Seller
 
 </span>
 
-)}
+);
 
-
-
-{rating > 0 && (
-
-<span className="
-text-sm
-text-gray-600
-">
-
-⭐ {rating}
-
-</span>
-
-)}
-
-
-</div>
-
-)
 
 }
