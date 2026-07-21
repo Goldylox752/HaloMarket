@@ -1,86 +1,15 @@
 "use client";
 
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 
-
-export default function FavoriteButton({productId}){
-
-
-const [saved,setSaved]=useState(false);
-
-const [loading,setLoading]=useState(false);
+export default function FavoriteButton({ productId }) {
 
 
+const [saved,setSaved] = useState(false);
 
-const supabase=createClient();
-
-
-
-
-
-useEffect(()=>{
-
-
-async function checkFavorite(){
-
-
-const {
-data:{
-user
-}
-
-}=await supabase.auth.getUser();
-
-
-
-if(!user){
-
-return;
-
-}
-
-
-
-const {data}=await supabase
-
-.from("favorites")
-
-.select("id")
-
-.eq("user_id",user.id)
-
-.eq("product_id",productId)
-
-.single();
-
-
-
-
-
-if(data){
-
-setSaved(true);
-
-}
-
-
-}
-
-
-
-checkFavorite();
-
-
-
-},[]);
-
-
-
-
-
+const [loading,setLoading] = useState(false);
 
 
 
@@ -90,19 +19,24 @@ async function toggleFavorite(){
 setLoading(true);
 
 
+const supabase = createClient();
+
+
 
 const {
 data:{
 user
 }
 
-}=await supabase.auth.getUser();
+} = await supabase.auth.getUser();
 
 
 
 if(!user){
 
-window.location.href="/login";
+alert("Please login to save favourites.");
+
+setLoading(false);
 
 return;
 
@@ -115,16 +49,15 @@ return;
 if(saved){
 
 
-
 await supabase
 
 .from("favorites")
 
 .delete()
 
-.eq("user_id",user.id)
+.eq("user_id", user.id)
 
-.eq("product_id",productId);
+.eq("product_id", productId);
 
 
 
@@ -133,7 +66,6 @@ setSaved(false);
 
 
 }else{
-
 
 
 await supabase
@@ -153,19 +85,14 @@ product_id:productId
 setSaved(true);
 
 
-
 }
-
 
 
 
 setLoading(false);
 
 
-
 }
-
-
 
 
 
@@ -179,46 +106,18 @@ onClick={toggleFavorite}
 
 disabled={loading}
 
-className={`w-full py-4 rounded-xl font-bold text-lg transition
-
-${
-
-saved
-
-?
-
-"bg-red-500 text-white"
-
-:
-
-"bg-black text-white"
-
-}
-
-`}
+className="w-full rounded-xl border py-4 font-bold transition hover:bg-gray-100"
 
 >
 
 
-{
-
-saved
-
-?
-
-"❤️ Saved"
-
-:
-
-"♡ Save Listing"
-
-}
-
+{saved ? "❤️ Saved" : "🤍 Add to Favourites"}
 
 
 </button>
 
 
-)
+);
+
 
 }
