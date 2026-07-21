@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 
-async function getSellerData(){
+
+async function getSellerListings(){
 
 
 const supabase = await createClient();
@@ -21,6 +22,7 @@ user
 
 
 
+
 if(!user){
 
 redirect("/login");
@@ -31,26 +33,22 @@ redirect("/login");
 
 
 
-const {data:products,error} = await supabase
+const {
+data:products,
+error
+
+}= await supabase
 
 .from("products")
 
 .select(`
-
 id,
-
 title,
-
 price,
-
 image,
-
 slug,
-
 status,
-
 created_at
-
 `)
 
 .eq(
@@ -67,27 +65,20 @@ ascending:false
 
 
 
+
+
+
 if(error){
 
-console.error(error);
+console.log(error);
 
-return {
-user,
-products:[]
-};
+return [];
 
 }
 
 
 
-return {
-
-user,
-
-products:products ?? []
-
-};
-
+return products || [];
 
 }
 
@@ -111,16 +102,26 @@ currency:"CAD"
 
 
 
+
+export const metadata = {
+
+title:"Seller Dashboard | Halo Marketplace",
+
+description:
+"Manage your Halo Marketplace listings."
+
+};
+
+
+
+
+
+
+
 export default async function SellerDashboard(){
 
 
-const {
-
-user,
-
-products
-
-}= await getSellerData();
+const products = await getSellerListings();
 
 
 
@@ -128,10 +129,19 @@ products
 
 return (
 
-<main className="min-h-screen bg-gray-50 px-6 py-16">
+<main className="
+min-h-screen
+bg-gray-50
+px-6
+py-16
+">
 
 
-<div className="mx-auto max-w-7xl">
+
+<div className="
+mx-auto
+max-w-7xl
+">
 
 
 
@@ -140,23 +150,40 @@ return (
 {/* HEADER */}
 
 
-<div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+
+<div className="
+flex
+flex-col
+justify-between
+gap-6
+md:flex-row
+md:items-center
+">
 
 
 <div>
 
-<h1 className="text-5xl font-black">
+
+<h1 className="
+text-5xl
+font-black
+">
 
 Seller Dashboard
 
 </h1>
 
 
-<p className="mt-3 text-gray-600">
 
-Manage your Halo Market store and listings.
+<p className="
+mt-3
+text-gray-600
+">
+
+Manage your Halo Marketplace store.
 
 </p>
+
 
 
 </div>
@@ -168,7 +195,14 @@ Manage your Halo Market store and listings.
 
 href="/sell"
 
-className="rounded-xl bg-indigo-600 px-8 py-4 text-center font-bold text-white hover:bg-indigo-700"
+className="
+rounded-xl
+bg-black
+px-8
+py-4
+font-bold
+text-white
+"
 
 >
 
@@ -186,81 +220,148 @@ className="rounded-xl bg-indigo-600 px-8 py-4 text-center font-bold text-white h
 
 
 
-
 {/* STATS */}
 
 
-<div className="mt-12 grid gap-6 md:grid-cols-4">
+
+<div className="
+mt-12
+grid
+gap-6
+md:grid-cols-4
+">
 
 
 
-<div className="rounded-3xl bg-white p-8 shadow-sm">
+<div className="
+rounded-3xl
+bg-white
+p-8
+shadow-sm
+">
 
 <p className="text-gray-500">
+
 Listings
+
 </p>
 
-<h2 className="mt-3 text-4xl font-black">
+
+<h2 className="
+mt-3
+text-4xl
+font-black
+">
 
 {products.length}
 
 </h2>
 
+
 </div>
 
 
 
 
 
-<div className="rounded-3xl bg-white p-8 shadow-sm">
+
+<div className="
+rounded-3xl
+bg-white
+p-8
+shadow-sm
+">
 
 <p className="text-gray-500">
-Sales
+
+Active
+
 </p>
 
-<h2 className="mt-3 text-4xl font-black">
+
+<h2 className="
+mt-3
+text-4xl
+font-black
+">
+
+{
+products.filter(
+p=>p.status==="active"
+).length
+}
+
+</h2>
+
+
+</div>
+
+
+
+
+
+
+
+<div className="
+rounded-3xl
+bg-white
+p-8
+shadow-sm
+">
+
+<p className="text-gray-500">
+
+Sales
+
+</p>
+
+
+<h2 className="
+mt-3
+text-4xl
+font-black
+">
 
 0
 
 </h2>
 
+
 </div>
 
 
 
 
 
-<div className="rounded-3xl bg-white p-8 shadow-sm">
+
+
+<div className="
+rounded-3xl
+bg-white
+p-8
+shadow-sm
+">
 
 <p className="text-gray-500">
+
 Revenue
+
 </p>
 
-<h2 className="mt-3 text-4xl font-black">
+
+<h2 className="
+mt-3
+text-4xl
+font-black
+">
 
 $0
 
 </h2>
 
-</div>
-
-
-
-
-
-<div className="rounded-3xl bg-white p-8 shadow-sm">
-
-<p className="text-gray-500">
-Messages
-</p>
-
-<h2 className="mt-3 text-4xl font-black">
-
-0
-
-</h2>
 
 </div>
+
 
 
 
@@ -273,130 +374,50 @@ Messages
 
 
 
-{/* QUICK LINKS */}
 
+{/* LISTINGS */}
 
-<div className="mt-12 grid gap-6 md:grid-cols-3">
 
 
+<section className="
+mt-16
+">
 
-<Link
 
-href="/orders"
+<div className="
+mb-8
+flex
+justify-between
+items-center
+">
 
-className="rounded-3xl bg-white p-8 shadow-sm hover:shadow-xl"
 
->
-
-<h3 className="text-2xl font-black">
-
-📦 Orders
-
-</h3>
-
-
-<p className="mt-3 text-gray-600">
-
-Manage customer purchases.
-
-</p>
-
-
-</Link>
-
-
-
-
-<Link
-
-href="/messages"
-
-className="rounded-3xl bg-white p-8 shadow-sm hover:shadow-xl"
-
->
-
-<h3 className="text-2xl font-black">
-
-💬 Messages
-
-</h3>
-
-
-<p className="mt-3 text-gray-600">
-
-Talk with buyers.
-
-</p>
-
-
-</Link>
-
-
-
-
-
-<Link
-
-href="/support"
-
-className="rounded-3xl bg-white p-8 shadow-sm hover:shadow-xl"
-
->
-
-<h3 className="text-2xl font-black">
-
-⚙️ Store Settings
-
-</h3>
-
-
-<p className="mt-3 text-gray-600">
-
-Manage your seller account.
-
-</p>
-
-
-</Link>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-{/* PRODUCTS */}
-
-
-<section className="mt-16">
-
-
-<div className="mb-8 flex justify-between items-center">
-
-
-<h2 className="text-3xl font-black">
+<h2 className="
+text-3xl
+font-black
+">
 
 My Listings
 
 </h2>
 
 
+
 <Link
 
 href="/sell"
 
-className="font-bold text-indigo-600"
+className="
+font-bold
+text-indigo-600
+"
 
 >
 
 Add Product →
 
 </Link>
+
 
 
 </div>
@@ -411,7 +432,13 @@ Add Product →
 products.length === 0 ? (
 
 
-<div className="rounded-3xl bg-white p-16 text-center">
+
+<div className="
+rounded-3xl
+bg-white
+p-16
+text-center
+">
 
 
 <div className="text-7xl">
@@ -421,18 +448,50 @@ products.length === 0 ? (
 </div>
 
 
-<h3 className="mt-5 text-3xl font-black">
+
+<h3 className="
+mt-5
+text-3xl
+font-black
+">
 
 No Listings Yet
 
 </h3>
 
 
-<p className="mt-3 text-gray-600">
+
+<p className="
+mt-3
+text-gray-600
+">
 
 Create your first product and start selling.
 
 </p>
+
+
+
+<Link
+
+href="/sell"
+
+className="
+mt-6
+inline-block
+rounded-xl
+bg-black
+px-6
+py-3
+font-bold
+text-white
+"
+
+>
+
+Create Listing
+
+</Link>
 
 
 
@@ -444,27 +503,46 @@ Create your first product and start selling.
 
 
 
-<div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+<div className="
+grid
+gap-8
+sm:grid-cols-2
+lg:grid-cols-4
+">
 
 
 
-{products.map((product)=>(
+{
+
+products.map(product=>(
+
 
 
 <div
 
 key={product.id}
 
-className="overflow-hidden rounded-3xl bg-white shadow-sm"
+className="
+overflow-hidden
+rounded-3xl
+bg-white
+shadow-sm
+"
 
 >
 
 
 
-<div className="relative h-52 bg-gray-100">
+<div className="
+relative
+h-52
+bg-gray-100
+">
 
 
-{product.image ? (
+{
+
+product.image ? (
 
 
 <Image
@@ -475,7 +553,9 @@ alt={product.title}
 
 fill
 
-className="object-cover"
+className="
+object-cover
+"
 
 />
 
@@ -483,18 +563,27 @@ className="object-cover"
 ):(
 
 
-<div className="flex h-full items-center justify-center text-6xl">
+<div className="
+flex
+h-full
+items-center
+justify-center
+text-6xl
+">
 
 📦
 
 </div>
 
 
-)}
+)
 
+}
 
 
 </div>
+
+
 
 
 
@@ -503,7 +592,10 @@ className="object-cover"
 <div className="p-6">
 
 
-<h3 className="font-black">
+<h3 className="
+font-black
+truncate
+">
 
 {product.title}
 
@@ -511,7 +603,13 @@ className="object-cover"
 
 
 
-<p className="mt-3 text-xl font-black text-indigo-600">
+
+<p className="
+mt-3
+text-xl
+font-black
+text-indigo-600
+">
 
 {formatPrice(product.price)}
 
@@ -520,25 +618,75 @@ className="object-cover"
 
 
 
-<p className="mt-2 text-sm capitalize text-gray-500">
 
-Status: {product.status || "active"}
+<span className="
+mt-3
+inline-block
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-sm
+capitalize
+">
 
-</p>
+{product.status || "active"}
 
+</span>
+
+
+
+
+
+
+
+
+<div className="
+mt-6
+space-y-3
+">
+
+
+
+<Link
+
+href={`/product/${product.slug}`}
+
+className="
+block
+rounded-xl
+border
+py-3
+text-center
+font-bold
+"
+
+>
+
+View Listing
+
+</Link>
 
 
 
 
 <Link
 
-href={`/product/${product.slug ?? product.id}`}
+href={`/seller/edit/${product.id}`}
 
-className="mt-5 block text-center font-bold text-indigo-600"
+className="
+block
+rounded-xl
+bg-black
+py-3
+text-center
+font-bold
+text-white
+"
 
 >
 
-View Listing →
+Edit Listing
 
 </Link>
 
@@ -548,11 +696,19 @@ View Listing →
 
 
 
+
+
 </div>
 
 
 
-))}
+</div>
+
+
+
+))
+
+}
 
 
 
@@ -566,8 +722,9 @@ View Listing →
 
 
 
-
 </section>
+
+
 
 
 
@@ -575,9 +732,9 @@ View Listing →
 </div>
 
 
+
 </main>
 
 );
-
 
 }
