@@ -2,15 +2,35 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 
+function createSlug(text){
+
+return text
+
+.toLowerCase()
+
+.trim()
+
+.replace(/[^a-z0-9]+/g,"-")
+
+.replace(/^-+|-+$/g,"");
+
+}
+
+
+
 export default function SellPage(){
+
 
 
 async function createProduct(formData){
 
+
 "use server";
 
 
+
 const supabase = await createClient();
+
 
 
 
@@ -23,6 +43,7 @@ user
 
 
 
+
 if(!user){
 
 redirect("/login");
@@ -32,12 +53,20 @@ redirect("/login");
 
 
 
+
 const title = formData.get("title");
+
 const description = formData.get("description");
-const price = formData.get("price");
+
+const price = Number(formData.get("price"));
+
 const location = formData.get("location");
+
 const category = formData.get("category");
+
 const condition = formData.get("condition");
+
+
 
 const files = formData.getAll("images");
 
@@ -47,14 +76,21 @@ let uploadedImages = [];
 
 
 
+
+
 for(const file of files){
 
 
-if(file.size > 0){
+
+if(file && file.size > 0){
+
 
 
 const fileName =
-`${user.id}/${Date.now()}-${file.name}`;
+
+`${user.id}/${crypto.randomUUID()}-${file.name}`;
+
+
 
 
 
@@ -62,21 +98,31 @@ const {
 data,
 error
 
-}=await supabase.storage
+}= await supabase.storage
+
 .from("product-images")
+
 .upload(
+
 fileName,
+
 file,
+
 {
+
 contentType:file.type
+
 }
+
 );
+
+
 
 
 
 if(error){
 
-console.log(error);
+console.error(error);
 
 continue;
 
@@ -84,43 +130,66 @@ continue;
 
 
 
+
+
 const {
+
 data:{
 publicUrl
 
 }
 
-}=supabase.storage
+}= supabase.storage
+
 .from("product-images")
+
 .getPublicUrl(
+
 data.path
+
 );
+
 
 
 
 uploadedImages.push(publicUrl);
 
 
-}
-
 
 }
 
 
+}
 
 
 
-const {error}=await supabase
+
+
+const slug =
+
+`${createSlug(title)}-${Date.now()}`;
+
+
+
+
+
+
+
+const {error}= await supabase
+
 .from("products")
+
 .insert({
 
 seller_id:user.id,
 
 title,
 
+slug,
+
 description,
 
-price:Number(price),
+price,
 
 location,
 
@@ -128,11 +197,15 @@ category,
 
 condition,
 
-image:uploadedImages[0] || null,
+image:
 
-images:uploadedImages,
+uploadedImages[0] || null,
 
-created_at:new Date()
+images:
+
+uploadedImages,
+
+status:"active"
 
 });
 
@@ -142,7 +215,7 @@ created_at:new Date()
 
 if(error){
 
-console.log(error);
+console.error(error);
 
 return;
 
@@ -150,7 +223,10 @@ return;
 
 
 
-redirect("/products");
+
+
+redirect("/seller/dashboard");
+
 
 
 }
@@ -158,29 +234,32 @@ redirect("/products");
 
 
 
+
+
 return (
 
-<main className="min-h-screen bg-gray-50 py-16 px-6">
+<main className="min-h-screen bg-gray-50 px-6 py-16">
 
 
-<div className="max-w-3xl mx-auto">
+<div className="mx-auto max-w-3xl">
 
 
-<div className="bg-white rounded-3xl shadow p-10">
+<div className="rounded-3xl bg-white p-10 shadow-sm">
 
 
-<h1 className="text-4xl font-bold">
+<h1 className="text-4xl font-black">
 
-Sell on Halo Marketplace
+Sell on Halo Market
 
 </h1>
 
 
-<p className="text-gray-500 mt-3">
+<p className="mt-3 text-gray-600">
 
 Create your listing and reach buyers across Canada.
 
 </p>
+
 
 
 
@@ -191,7 +270,7 @@ action={createProduct}
 
 encType="multipart/form-data"
 
-className="mt-8 space-y-5"
+className="mt-10 space-y-5"
 
 >
 
@@ -206,7 +285,7 @@ required
 
 placeholder="Product title"
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 />
 
@@ -218,16 +297,15 @@ className="w-full border rounded-xl p-4"
 
 name="price"
 
-required
-
 type="number"
+
+required
 
 placeholder="Price CAD"
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 />
-
 
 
 
@@ -241,11 +319,9 @@ required
 
 placeholder="City / Province"
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 />
-
-
 
 
 
@@ -257,76 +333,33 @@ name="category"
 
 required
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 >
 
-
 <option value="">
-
 Choose Category
-
 </option>
 
+<option>Vehicles</option>
 
-<option value="Vehicles">
+<option>Electronics</option>
 
-🚗 Vehicles
+<option>Computers</option>
 
-</option>
+<option>Home</option>
 
+<option>Fashion</option>
 
-<option value="Electronics">
+<option>Gaming</option>
 
-📱 Electronics
+<option>Tools</option>
 
-</option>
+<option>Sports</option>
 
-
-<option value="Home">
-
-🏠 Home
-
-</option>
-
-
-<option value="Fashion">
-
-👕 Fashion
-
-</option>
-
-
-<option value="Gaming">
-
-🎮 Gaming
-
-</option>
-
-
-<option value="Tools">
-
-🛠 Tools
-
-</option>
-
-
-<option value="Sports">
-
-⚽ Sports
-
-</option>
-
-
-<option value="Services">
-
-💼 Services
-
-</option>
-
+<option>Services</option>
 
 </select>
-
 
 
 
@@ -339,48 +372,23 @@ name="condition"
 
 required
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 >
 
-
 <option value="">
-
 Condition
-
 </option>
 
+<option>New</option>
 
-<option>
+<option>Like New</option>
 
-New
+<option>Used</option>
 
-</option>
-
-
-<option>
-
-Like New
-
-</option>
-
-
-<option>
-
-Used
-
-</option>
-
-
-<option>
-
-Refurbished
-
-</option>
-
+<option>Refurbished</option>
 
 </select>
-
 
 
 
@@ -397,7 +405,7 @@ rows="6"
 
 placeholder="Describe your item..."
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 />
 
@@ -406,13 +414,11 @@ className="w-full border rounded-xl p-4"
 
 
 
+<label className="font-bold">
 
-<label className="font-semibold">
-
-Upload Photos
+Product Photos
 
 </label>
-
 
 
 
@@ -428,7 +434,7 @@ accept="image/*"
 
 required
 
-className="w-full border rounded-xl p-4"
+className="w-full rounded-xl border p-4"
 
 />
 
@@ -437,16 +443,16 @@ className="w-full border rounded-xl p-4"
 
 
 
-
 <button
 
-className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl text-lg font-bold"
+className="w-full rounded-xl bg-indigo-600 py-4 text-lg font-bold text-white hover:bg-indigo-700"
 
 >
 
 Publish Listing
 
 </button>
+
 
 
 
@@ -463,7 +469,7 @@ Publish Listing
 
 </main>
 
+);
 
-)
 
 }
