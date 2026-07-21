@@ -7,101 +7,89 @@ import { createClient } from "@/lib/supabase/server";
 
 async function getFavorites(){
 
-  const supabase = await createClient();
-
-
-  const {
-    data:{
-      user
-    }
-  } = await supabase.auth.getUser();
+const supabase = await createClient();
 
 
 
-  if(!user){
-
-    redirect("/login");
-
-  }
-
-
-
-  const {
-    data:favorites,
-    error
-  } = await supabase
-    .from("favorites")
-    .select(`
-      product_id,
-      created_at
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", {
-      ascending:false
-    });
+const {
+data:{
+user
+}
+}=await supabase.auth.getUser();
 
 
 
-  if(error){
+if(!user){
 
-    console.log(error);
+redirect("/login");
 
-    return [];
-
-  }
+}
 
 
 
-  if(!favorites?.length){
 
-    return [];
+const {
+data,
+error
+}=await supabase
 
-  }
+.from("favorites")
+
+.select(`
+created_at,
+
+products(
+id,
+title,
+price,
+image,
+location,
+slug,
+category,
+seller_id,
+
+profiles(
+username,
+avatar,
+verified
+)
+
+)
+
+`)
+
+.eq(
+"user_id",
+user.id
+)
+
+.order(
+"created_at",
+{
+ascending:false
+}
+);
 
 
 
-  const productIds = favorites.map(
-    item => item.product_id
-  );
+
+
+if(error){
+
+console.error(error);
+
+return [];
+
+}
 
 
 
-  const {
-    data:products,
-    error:productsError
-  } = await supabase
-    .from("products")
-    .select(`
-      id,
-      title,
-      price,
-      image,
-      location,
-      slug,
-      category
-    `)
-    .in("id", productIds);
 
-
-
-  if(productsError){
-
-    console.log(productsError);
-
-    return [];
-
-  }
-
-
-
-  // Keep favorites newest first
-
-  return productIds
-    .map(id =>
-      products.find(product => product.id === id)
-    )
-    .filter(Boolean);
-
+return data
+?.map(item=>item.products)
+.filter(Boolean)
+||
+[];
 
 }
 
@@ -110,14 +98,19 @@ async function getFavorites(){
 
 
 
-export const metadata = {
 
-  title:"Favorites | Halo Marketplace",
 
-  description:
-  "Your saved Halo Marketplace listings."
+export const metadata={
+
+title:
+"Favorites | Halo Marketplace",
+
+description:
+"Saved listings on Halo Marketplace."
 
 };
+
+
 
 
 
@@ -128,25 +121,35 @@ export const metadata = {
 export default async function FavoritesPage(){
 
 
-const products = await getFavorites();
+const products =
+await getFavorites();
+
 
 
 
 return (
 
-<main className="min-h-screen bg-gray-50">
+<main className="
+min-h-screen
+bg-gray-50
+">
+
+
 
 
 
 <section className="
 bg-black
-text-white
-py-16
 px-6
+py-16
+text-white
 ">
 
 
-<div className="max-w-6xl mx-auto">
+<div className="
+mx-auto
+max-w-7xl
+">
 
 
 <h1 className="
@@ -154,18 +157,17 @@ text-5xl
 font-black
 ">
 
-❤️ Favorites
+❤️ Saved Listings
 
 </h1>
 
 
 <p className="
 mt-4
-text-lg
 text-gray-300
 ">
 
-Your saved marketplace listings.
+Your favorite Halo Marketplace items.
 
 </p>
 
@@ -181,12 +183,15 @@ Your saved marketplace listings.
 
 
 
+
 <section className="
-max-w-6xl
 mx-auto
+max-w-7xl
 px-6
 py-12
 ">
+
+
 
 
 
@@ -199,13 +204,12 @@ rounded-3xl
 bg-white
 p-12
 text-center
-shadow
 ">
 
 
 <h2 className="
 text-3xl
-font-bold
+font-black
 ">
 
 No favorites yet
@@ -214,11 +218,11 @@ No favorites yet
 
 
 <p className="
-mt-4
+mt-3
 text-gray-500
 ">
 
-Save listings while browsing Halo Marketplace.
+Save products you want to come back to.
 
 </p>
 
@@ -241,7 +245,7 @@ text-white
 
 >
 
-Browse Marketplace
+Browse Products
 
 </Link>
 
@@ -255,17 +259,17 @@ Browse Marketplace
 
 
 
+
 <div className="
 grid
-grid-cols-1
+gap-6
 sm:grid-cols-2
 lg:grid-cols-4
-gap-6
 ">
 
 
-{
-products.map(product => (
+
+{products.map(product=>(
 
 
 <Link
@@ -275,28 +279,28 @@ key={product.id}
 href={`/product/${product.slug}`}
 
 className="
+group
 overflow-hidden
-rounded-2xl
+rounded-3xl
 bg-white
-shadow-sm
 transition
+hover:-translate-y-1
 hover:shadow-xl
 "
-
 
 >
 
 
+
 <div className="
 relative
-h-56
+h-60
 bg-gray-100
 ">
 
 
-{
-product.image ? (
 
+{product.image ? (
 
 <Image
 
@@ -306,12 +310,15 @@ alt={product.title}
 
 fill
 
-sizes="(max-width:768px) 100vw, 25vw"
+sizes="300px"
 
-className="object-cover"
+className="
+object-cover
+transition
+group-hover:scale-105
+"
 
 />
-
 
 ):(
 
@@ -321,39 +328,60 @@ flex
 h-full
 items-center
 justify-center
-text-gray-400
+text-5xl
 ">
 
-No Image
+📦
+
+</div>
+
+)}
+
+
 
 </div>
 
 
-)
-
-}
-
-
-
-</div>
 
 
 
 
 
+<div className="
+p-5
+">
 
-<div className="p-5">
+
+<span className="
+rounded-full
+bg-gray-100
+px-3
+py-1
+text-xs
+font-bold
+">
+
+{product.category || "General"}
+
+</span>
+
+
+
 
 
 <h2 className="
+mt-4
 truncate
 text-lg
-font-bold
+font-black
 ">
 
 {product.title}
 
 </h2>
+
+
+
 
 
 
@@ -363,15 +391,17 @@ text-2xl
 font-black
 ">
 
-{Number(product.price).toLocaleString(
+{new Intl.NumberFormat(
 "en-CA",
 {
 style:"currency",
 currency:"CAD"
 }
-)}
+).format(product.price)}
 
 </p>
+
+
 
 
 
@@ -389,55 +419,120 @@ text-gray-500
 
 
 
-{
-product.category && (
 
 
-<span className="
-mt-4
-inline-block
-rounded-full
-bg-gray-100
-px-3
-py-1
-text-sm
-font-medium
+
+
+<div className="
+mt-5
+flex
+items-center
+gap-3
+border-t
+pt-4
 ">
 
-{product.category}
 
-</span>
+{product.profiles?.avatar ? (
+
+<Image
+
+src={product.profiles.avatar}
+
+alt="seller"
+
+width={32}
+
+height={32}
+
+className="
+rounded-full
+"
+
+/>
+
+):(
 
 
-)
+<div className="
+h-8
+w-8
+rounded-full
+bg-gray-200
+">
 
-}
+</div>
+
+)}
+
+
+
+
+
+<div>
+
+
+<p className="
+text-sm
+font-bold
+">
+
+{product.profiles?.username || "Seller"}
+
+</p>
+
+
+
+{product.profiles?.verified && (
+
+<p className="
+text-xs
+font-bold
+text-green-600
+">
+
+✓ Verified Seller
+
+</p>
+
+)}
+
+
+</div>
 
 
 
 </div>
 
+
+
+
+
+</div>
 
 
 </Link>
 
 
-))
-
-}
-
+))}
 
 
 </div>
 
 
+
 )
+
+
 
 }
 
 
 
+
 </section>
+
+
 
 
 
